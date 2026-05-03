@@ -54,6 +54,7 @@ zh-CN:
       subtitle: 全面洞察您的财务健康状况
       title: 财务报告
       toggle_section: 切换模块显示/隐藏
+      print_report: 打印报告
     invalid_date_range: 结束日期不能早于开始日期。日期已自动交换。
     summary:
       budget_performance: 预算执行情况
@@ -104,6 +105,98 @@ zh-CN:
         type: 类型
         uncategorized: 未分类
       title: 交易明细分析
+    net_worth:
+      title: 资产净值
+      current_net_worth: 当前资产净值
+      period_change: 期间变动
+      assets_vs_liabilities: 资产与负债
+      total_assets: 资产
+      total_liabilities: 负债
+      no_assets: 无资产
+      no_liabilities: 无负债
+    investment_performance:
+      title: 投资表现
+      portfolio_value: 投资组合价值
+      total_return: 总收益
+      contributions: 期间供款
+      withdrawals: 期间取款
+      top_holdings: 主要持仓
+      holding: 持仓
+      weight: 权重
+      value: 价值
+      return: 收益
+      accounts: 投资账户
+      gains_by_tax_treatment: 按税收处理的收益
+      unrealized_gains: 未实现收益
+      realized_gains: 已实现收益
+      total_gains: 总收益
+      taxable_realized_note: 这些收益可能需要缴税
+      no_data: "-"
+      view_details: 查看详情
+      holdings_count:
+        one: "%{count} 个持仓"
+        other: "%{count} 个持仓"
+      sells_count:
+        one: "%{count} 笔卖出"
+        other: "%{count} 笔卖出"
+      holdings: 持仓
+      sell_trades: 卖出交易
+      and_more: "+%{count} 更多"
+    investment_flows:
+      title: 投资资金流动
+      description: 追踪进出您投资账户的资金流动
+      contributions: 供款
+      withdrawals: 取款
+      net_flow: 净流量
+    print:
+      document_title: 财务报告
+      title: 财务报告
+      generated_on: "生成于 %{date}"
+      summary:
+        title: 摘要
+        income: 收入
+        expenses: 支出
+        net_savings: 净储蓄
+        budget: 预算
+        vs_prior: "与上期相比 %{percent}%"
+        of_income: "占收入 %{percent}%"
+        used: 已使用
+      net_worth:
+        title: 资产净值
+        current_balance: 当前余额
+        this_period: 本期
+        assets: 资产
+        liabilities: 负债
+        no_liabilities: 无负债
+      trends:
+        title: 月度趋势
+        month: 月份
+        income: 收入
+        expenses: 支出
+        net: 净额
+        savings_rate: 储蓄率
+        average: 平均
+        current_month_note: "* 当前月份（数据不完整）"
+      investments:
+        title: 投资
+        portfolio_value: 投资组合价值
+        total_return: 总收益
+        contributions: 供款
+        withdrawals: 取款
+        this_period: 本期
+        top_holdings: 主要持仓
+        holding: 持仓
+        weight: 权重
+        value: 价值
+        return: 收益
+      spending:
+        title: 按分类支出
+        income: 收入
+        expenses: 支出
+        category: 分类
+        amount: 金额
+        percent: "%"
+        more_categories: "+ %{count} 个更多分类"
     trends:
       avg_monthly_expenses: 月均支出
       avg_monthly_income: 月均收入
