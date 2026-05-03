@@ -32,7 +32,7 @@ zh-CN:
         no_accounts: 您目前没有任何账户。请创建一个账户用于处理 CSV 中的（未分配）行，或返回上一步的“清洗”环节提供一个可用的账户名称。
         rows_label: 行数
         sure_mapping_label: "%{product_name} 中的 %{mapping}"
-        unassigned_account: 需要为未分配行创建新账户？
+        unassigned_account: 需要为未分配行创建新账户吗？
       show:
         account_mapping_description: 将导入文件中的所有账户分配到 %{product} 的现有账户。您也可以新建账户或保留为未分类。
         account_mapping_title: 分配账户
