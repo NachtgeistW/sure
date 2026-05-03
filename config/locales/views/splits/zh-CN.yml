@@ -1,0 +1,47 @@
+---
+zh-CN:
+  splits:
+    new:
+      title: 拆分交易
+      description: 将此交易拆分为多条具有不同分类和金额的记录。
+      submit: 拆分交易
+      cancel: 取消
+      add_row: 添加拆分项
+      remove_row: 移除
+      remaining: 剩余金额
+      amounts_must_match: 拆分金额之和必须等于原交易金额。
+      name_label: 名称
+      name_placeholder: 拆分名称
+      amount_label: 金额
+      category_label: 分类
+      uncategorized: "（未分类）"
+      original_name: "名称："
+      original_date: "日期："
+      original_amount: "金额"
+      split_number: "拆分项 #%{number}"
+    create:
+      success: 交易拆分成功
+      not_splittable: 此交易不支持拆分。
+    destroy:
+      success: 交易已取消拆分
+    show:
+      title: 拆分记录
+      description: 此交易已拆分为以下记录。
+      button_title: 拆分交易
+      button_description: 将此交易拆分为多条具有不同分类和金额的记录。
+      button: 拆分
+      unsplit_title: 取消拆分
+      unsplit_button: 取消拆分
+      unsplit_confirm: 这将移除所有拆分记录并恢复原始交易。
+    edit:
+      title: 编辑拆分
+      description: 修改此交易的拆分记录。
+      submit: 更新拆分
+      not_split: 此交易尚未拆分。
+    update:
+      success: 拆分更新成功
+    child:
+      title: 拆分的一部分
+      description: 此记录属于一条拆分交易。
+      edit_split: 编辑拆分
+      unsplit: 取消拆分

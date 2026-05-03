@@ -29,10 +29,100 @@ zh-CN:
       linked_with_provider: 已与 %{provider} 关联
     index:
       import: 导入
-      transaction: 交易
-      transactions: 交易记录
-    new:
-      new_transaction: 新建交易
+      categorize_button:
+        one: "分类 (1)"
+        other: "分类 (%{count})"
+    categorizes:
+      show:
+        exit: "退出"
+        skip: "跳过"
+        remaining:
+          one: "剩余 1 条未分类交易"
+          other: "剩余 %{count} 条未分类交易"
+        transaction_count:
+          one: "1 条交易"
+          other: "%{count} 条交易"
+        transactions_hint: "取消勾选以排除某条交易，或直接在该行为其分配不同分类。"
+        assign_category: "分配分类"
+        assign_category_prompt: "→ 分配"
+        filter_placeholder: "搜索分类..."
+        col_transaction: "交易"
+        col_date: "日期"
+        col_amount: "金额"
+        col_category: "分类"
+        type_income: "收入"
+        type_expense: "支出"
+        create_rule_label: "创建分类规则"
+        rule_description_prefix: "将来名称包含以下内容的%{type}交易"
+        rule_description_suffix: "也应归入此分类。"
+        no_categories: "无匹配分类"
+        all_done: "所有交易已完成分类"
+      create:
+        categorized:
+          one: "1 条交易已分类"
+          other: "%{count} 条交易已分类"
+        rule_creation_failed: "交易已分类，但规则创建失败（可能已存在）。"
+      entry_row:
+        include_checkbox: "包含 %{name}"
+        assign_category_select: "为 %{name} 分配分类"
+    list:
+      drag_drop_title: 拖放 CSV 文件以导入
+      drag_drop_subtitle: 直接上传交易记录
+      transaction: 条交易
+      transactions: 条交易
+    toggle_recurring_section: 切换即将发生的定期交易显示
+    search:
+      filters:
+        account: 账户
+        date: 日期
+        type: 类型
+        status: 状态
+        amount: 金额
+        category: 分类
+        tag: 标签
+        merchant: 商户
+    convert_to_trade:
+      title: 转换为证券交易
+      description: 将此交易转换为含证券详情的交易记录
+      date_label: "日期："
+      account_label: "账户："
+      amount_label: "金额："
+      security_label: 证券
+      security_prompt: 选择证券...
+      security_custom: "+ 输入自定义代码"
+      security_not_listed_hint: 没有找到您的证券？请在列表底部选择"输入自定义代码"。
+      ticker_placeholder: AAPL
+      ticker_hint: 输入股票/ETF 代码（如 AAPL、MSFT）
+      ticker_search_placeholder: 搜索代码...
+      ticker_search_hint: 按股票代码或公司名称搜索，或输入自定义代码
+      price_mismatch_title: 价格可能不匹配
+      price_mismatch_message: "您输入的价格（%{entered_price}/股）与 %{ticker} 当前市价（%{market_price}）差异较大。如有异常，可能选择了错误的证券——请尝试使用“输入自定义代码”指定正确的证券。"
+      quantity_label: 数量（股数）
+      quantity_placeholder: 例如 20
+      quantity_hint: 交易股数
+      price_label: 每股价格
+      price_placeholder: 例如 52.15
+      price_hint: 每股价格（%{currency}）
+      qty_or_price_hint: 至少输入数量或价格之一，另一项将根据交易金额（%{amount}）自动计算。
+      trade_type_label: 交易类型
+      trade_type_hint: 买入或卖出某证券的股份
+      exchange_label: 交易所（可选）
+      exchange_placeholder: XNAS
+      exchange_hint: 留空则自动识别
+      cancel: 取消
+      submit: 转换为交易
+      success: 交易已成功转换为证券交易
+      conversion_note: "从交易转换：%{original_name}（%{original_date}）"
+      errors:
+        not_investment_account: 仅投资账户中的交易可转换为证券交易
+        already_converted: 此交易已被转换或排除
+        enter_ticker: 请输入股票代码
+        security_not_found: 所选证券已不存在，请重新选择。
+        select_security: 请选择或输入证券
+        enter_qty_or_price: 请输入数量或每股价格之一，另一项将根据交易金额自动计算。
+        invalid_qty_or_price: 数量或价格无效，请输入有效的正数。
+        conversion_failed: "交易转换失败：%{error}"
+        unexpected_error: "转换时发生意外错误：%{error}"
     searches:
       filters:
         amount_filter:
@@ -89,4 +179,3 @@ zh-CN:
       settings: 设置
       tags_label: 标签
       uncategorized: "（未分类）"
-    toggle_recurring_section: 切换即将发生的定期交易显示
