@@ -5,25 +5,39 @@ zh-CN:
       account: 转账账户（可选）
       account_prompt: 搜索账户
       amount: 金额
+      fee: 交易手续费
       holding: 股票代码
+      holding_optional: 股票代码（可选）
       price: 每股价格
       qty: 数量
       submit: 添加交易
       ticker_placeholder: AAPL
       type: 交易类型
+      type_buy: 买入
+      type_sell: 卖出
+      type_deposit: 存入
+      type_withdrawal: 取出
+      type_dividend: 股息
+      type_interest: 利息
+      dividend_requires_security: 股息交易需要指定证券
     header:
       buy: 买入
+      sell: 卖出
+      dividend: 股息
+      interest: 利息
       current_market_price_label: 当前市价
       overview: 概览
       purchase_price_label: 买入价格
       purchase_qty_label: 买入数量
-      sell: 卖出
       symbol_label: 股票代码
       total_return_label: 未实现盈亏
     new:
       title: 新建交易
     show:
       additional: 附加信息
+      amount_label: 金额
+      buy: 买入
+      category_label: 分类
       cost_per_share_label: 每股成本
       date_label: 日期
       delete: 删除
@@ -32,7 +46,12 @@ zh-CN:
       details: 详情
       exclude_subtitle: 此交易将不计入报表和计算
       exclude_title: 从分析中排除
+      fee_label: 交易手续费
+      no_category: 无分类
       note_label: 备注
       note_placeholder: 在此添加额外备注...
+      provider_disabled_warning: "价格更新已暂停——%{provider} 提供商已禁用。请在设置中重新启用，或将持仓映射至其他提供商。"
       quantity_label: 数量
+      sell: 卖出
       settings: 设置
+      type_label: 类型

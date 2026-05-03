@@ -1,6 +1,18 @@
 ---
 zh-CN:
   budgets:
+    name:
+      custom_range: "%{start} - %{end_date}"
+      month_year: "%{month}"
+    copy_previous_prompt:
+      title: "设置您的预算"
+      description: "您可以从 %{source_name} 复制预算，或从头开始。"
+      copy_button: "从 %{source_name} 复制"
+      fresh_button: "从头开始"
+    copy_previous:
+      success: "已从 %{source_name} 复制预算"
+      no_source: "未找到可复制的历史预算"
+      already_initialized: "此预算已完成初始设置"
     show:
       categories:
         amount: 金额
