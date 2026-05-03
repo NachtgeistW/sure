@@ -1,10 +1,41 @@
 ---
 zh-CN:
   simplefin_items:
+    setup_accounts:
+      account_card:
+        balance: 余额
+      activity:
+        recent:
+          one: 1 笔交易 • 最近 %{when}
+          other: "%{count} 笔交易 • 最近 %{when}"
+        dormant: "%{days} 天内无活动"
+        empty: 尚未导入任何交易
+        likely_closed: 近期无活动且余额为零——此卡可能已关闭或已更换
+        today: 今天
+        yesterday: 昨天
+        days_ago:
+          one: 1 天前
+          other: "%{count} 天前"
+      stale_accounts:
+        title: 不再在 SimpleFIN 中的账户
+        description: 这些账户存在于您的数据库中，但 SimpleFIN 不再提供这些账户，可能是由于上游账户配置发生了变化。
+        action_prompt: 您希望如何处理？
+        action_delete: 删除账户及所有交易
+        action_move: 将交易迁移至：
+        action_skip: 暂时跳过
+        transaction_count:
+          one: "%{count} 笔交易"
+          other: "%{count} 笔交易"
     complete_account_setup:
       all_skipped: 所有账户已跳过。未创建任何账户。
       no_accounts: 无待设置账户。
-      success: 已成功创建 %{count} 个 SimpleFIN 账户！您的交易和投资数据正在后台导入。
+      success:
+        one: 已成功创建 %{count} 个 SimpleFIN 账户！您的交易和投资数据正在后台导入。
+        other: 已成功创建 %{count} 个 SimpleFIN 账户！您的交易和投资数据正在后台导入。
+      stale_accounts_processed: "陈旧账户：已删除 %{deleted} 个，已迁移 %{moved} 个。"
+      stale_accounts_errors:
+        one: "%{count} 个陈旧账户操作失败，请查看日志了解详情。"
+        other: "%{count} 个陈旧账户操作失败，请查看日志了解详情。"
     create:
       errors:
         blank_token: 请输入 SimpleFIN 设置令牌。
@@ -24,7 +55,25 @@ zh-CN:
       errors:
         invalid_simplefin_account: 所选 SimpleFIN 账户无效
         only_manual: 只能关联手动账户
+        different_provider: 此账户已关联到其他服务提供商，请先解除关联后再关联到 SimpleFIN。
       success: 账户已成功关联到 SimpleFIN
+    dismiss_replacement_suggestion:
+      dismissed: 更换建议已忽略
+    replacement_prompt:
+      title: 您的 %{institution} 卡片可能已更换
+      description: '"%{account_name}" 已关联到 "%{old_name}"，该账户近期无活动且余额为零。同一机构的新卡 "%{new_name}" 现已激活。请重新关联以保留您的历史记录。'
+      relink: 重新关联到新卡
+      confirm_title: 重新关联到新卡？
+      confirm_body: '"%{account_name}" 将关联到 "%{new_name}"。您的交易历史将保留，未来的交易将来自新卡。'
+      dismiss_aria: 忽略更换建议
+    reconciled_status:
+      message:
+        one: 已核对 %{count} 笔重复待处理交易
+        other: 已核对 %{count} 笔重复待处理交易
+    stale_pending_status:
+      message:
+        one: "%{count} 笔待处理交易超过 %{days} 天"
+        other: "%{count} 笔待处理交易超过 %{days} 天"
     new:
       cancel: 取消
       connect: 连接
@@ -56,11 +105,23 @@ zh-CN:
       setup_action: 设置新账户
       setup_description: 请为您新导入的 SimpleFIN 账户选择账户类型。
       setup_needed: 新账户待设置
+      setup_accounts_menu: 设置账户
+      more_accounts_available:
+        one: 还有 %{count} 个账户待设置
+        other: 还有 %{count} 个账户待设置
+      accounts_skipped_tooltip: 部分账户因同步时出错而被跳过
+      accounts_skipped_label: "已跳过：%{count}"
+      rate_limited_ago: "访问受限（%{time}前）"
+      rate_limited_recently: 近期访问受限
       status: 上次同步于 %{timestamp} 前
       status_never: 从未同步
       status_with_summary: 同步于 %{timestamp} 前 • %{summary}
       syncing: 同步中...
       update: 更新连接
+      stale_pending_note: （已从预算中排除）
+      stale_pending_accounts: "所在账户：%{accounts}"
+      reconciled_details_note: （详见同步摘要）
+      duplicate_accounts_skipped: 部分账户因重复而被跳过——请使用"关联现有账户"进行合并。
     update:
       errors:
         blank_token: 请输入 SimpleFIN 设置令牌。
