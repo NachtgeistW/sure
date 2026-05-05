@@ -117,7 +117,7 @@ zh-CN:
       step_1_html: "在 <a href=\"https://dashboard.snaptrade.com\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary underline\">dashboard.snaptrade.com</a> 创建账户"
       step_2: "从控制台复制您的 Client ID 和 Consumer Key"
       step_3: "在下方输入您的凭据并点击保存"
-      step_4: "前往账户页面，使用“连接其他券商”关联您的投资账户"
+      step_4: "前往账户页面，使用"连接其他券商"关联您的投资账户"
       free_tier_warning: "免费版包含 5 个券商连接，更多连接需要付费 SnapTrade 计划。"
       client_id_label: "Client ID"
       client_id_placeholder: "输入您的 SnapTrade Client ID"
