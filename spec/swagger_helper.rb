@@ -274,6 +274,29 @@ RSpec.configure do |config|
               pagination: { '$ref' => '#/components/schemas/Pagination' }
             }
           },
+          FamilySettings: {
+            type: :object,
+            required: %w[id currency locale date_format month_start_day moniker default_account_sharing custom_enabled_currencies enabled_currencies created_at updated_at],
+            properties: {
+              id: { type: :string, format: :uuid },
+              name: { type: :string, nullable: true },
+              currency: { type: :string },
+              locale: { type: :string },
+              date_format: { type: :string },
+              country: { type: :string, nullable: true },
+              timezone: { type: :string, nullable: true },
+              month_start_day: { type: :integer, minimum: 1, maximum: 28 },
+              moniker: { type: :string, enum: Family::MONIKERS },
+              default_account_sharing: { type: :string, enum: %w[shared private] },
+              custom_enabled_currencies: { type: :boolean },
+              enabled_currencies: {
+                type: :array,
+                items: { type: :string }
+              },
+              created_at: { type: :string, format: :'date-time' },
+              updated_at: { type: :string, format: :'date-time' }
+            }
+          },
           Category: {
             type: :object,
             required: %w[id name color icon],
@@ -422,6 +445,65 @@ RSpec.configure do |config|
               data: {
                 type: :array,
                 items: { '$ref' => '#/components/schemas/Rule' }
+              },
+              meta: {
+                type: :object,
+                required: %w[current_page total_pages total_count per_page],
+                properties: {
+                  current_page: { type: :integer },
+                  next_page: { type: :integer, nullable: true },
+                  prev_page: { type: :integer, nullable: true },
+                  total_pages: { type: :integer },
+                  total_count: { type: :integer },
+                  per_page: { type: :integer }
+                }
+              }
+            }
+          },
+          RuleRun: {
+            type: :object,
+            required: %w[id rule_id rule_name execution_type status transactions_queued transactions_processed transactions_modified pending_jobs_count executed_at rule created_at updated_at],
+            properties: {
+              id: { type: :string, format: :uuid },
+              rule_id: { type: :string, format: :uuid },
+              rule_name: { type: :string, nullable: true },
+              execution_type: { type: :string, enum: %w[manual scheduled] },
+              status: { type: :string, enum: %w[pending success failed] },
+              transactions_queued: { type: :integer, minimum: 0 },
+              transactions_processed: { type: :integer, minimum: 0 },
+              transactions_modified: { type: :integer, minimum: 0 },
+              pending_jobs_count: { type: :integer, minimum: 0 },
+              executed_at: { type: :string, format: :'date-time' },
+              error_message: { type: :string, nullable: true },
+              rule: {
+                type: :object,
+                nullable: true,
+                required: %w[id resource_type active],
+                properties: {
+                  id: { type: :string, format: :uuid },
+                  name: { type: :string, nullable: true },
+                  resource_type: { type: :string },
+                  active: { type: :boolean }
+                }
+              },
+              created_at: { type: :string, format: :'date-time' },
+              updated_at: { type: :string, format: :'date-time' }
+            }
+          },
+          RuleRunResponse: {
+            type: :object,
+            required: %w[data],
+            properties: {
+              data: { '$ref' => '#/components/schemas/RuleRun' }
+            }
+          },
+          RuleRunCollection: {
+            type: :object,
+            required: %w[data meta],
+            properties: {
+              data: {
+                type: :array,
+                items: { '$ref' => '#/components/schemas/RuleRun' }
               },
               meta: {
                 type: :object,
@@ -661,6 +743,95 @@ RSpec.configure do |config|
               data: { '$ref' => '#/components/schemas/ImportDetail' }
             }
           },
+          ImportRowMapping: {
+            type: :object,
+            required: %w[key type value create_when_empty creatable mappable],
+            properties: {
+              key: { type: :string, nullable: true },
+              type: { type: :string },
+              value: { type: :string, nullable: true },
+              create_when_empty: { type: :boolean },
+              creatable: { type: :boolean },
+              mappable: {
+                type: :object,
+                nullable: true,
+                properties: {
+                  id: { type: :string, format: :uuid },
+                  type: { type: :string },
+                  name: { type: :string, nullable: true }
+                }
+              }
+            }
+          },
+          ImportRowDiagnostic: {
+            type: :object,
+            required: %w[id row_number valid errors fields mappings],
+            properties: {
+              id: { type: :string, format: :uuid },
+              row_number: { type: :integer, minimum: 1 },
+              valid: { type: :boolean },
+              errors: {
+                type: :array,
+                items: { type: :string }
+              },
+              fields: {
+                type: :object,
+                properties: {
+                  account: { type: :string, nullable: true },
+                  date: { type: :string, nullable: true },
+                  qty: { type: :string, nullable: true },
+                  ticker: { type: :string, nullable: true },
+                  exchange_operating_mic: { type: :string, nullable: true },
+                  price: { type: :string, nullable: true },
+                  amount: { type: :string, nullable: true },
+                  currency: { type: :string, nullable: true },
+                  name: { type: :string, nullable: true },
+                  category: { type: :string, nullable: true },
+                  tags: { type: :string, nullable: true },
+                  entity_type: { type: :string, nullable: true },
+                  notes: { type: :string, nullable: true },
+                  active: { type: :boolean, nullable: true },
+                  effective_date: { type: :string, nullable: true },
+                  conditions: { type: :string, nullable: true },
+                  actions: { type: :string, nullable: true }
+                }
+              },
+              mappings: {
+                type: :object,
+                properties: {
+                  account: { '$ref' => '#/components/schemas/ImportRowMapping' },
+                  category: { '$ref' => '#/components/schemas/ImportRowMapping' },
+                  account_type: { '$ref' => '#/components/schemas/ImportRowMapping' },
+                  tags: {
+                    type: :array,
+                    items: { '$ref' => '#/components/schemas/ImportRowMapping' }
+                  }
+                }
+              }
+            }
+          },
+          ImportRowDiagnosticCollection: {
+            type: :object,
+            required: %w[data meta],
+            properties: {
+              data: {
+                type: :array,
+                items: { '$ref' => '#/components/schemas/ImportRowDiagnostic' }
+              },
+              meta: {
+                type: :object,
+                required: %w[current_page total_pages total_count per_page],
+                properties: {
+                  current_page: { type: :integer, minimum: 1 },
+                  next_page: { type: :integer, nullable: true },
+                  prev_page: { type: :integer, nullable: true },
+                  total_pages: { type: :integer, minimum: 0 },
+                  total_count: { type: :integer, minimum: 0 },
+                  per_page: { type: :integer, minimum: 1 }
+                }
+              }
+            }
+          },
           Trade: {
             type: :object,
             required: %w[id date amount currency name qty price account created_at updated_at],
@@ -740,6 +911,74 @@ RSpec.configure do |config|
               holdings: {
                 type: :array,
                 items: { '$ref' => '#/components/schemas/Holding' }
+              },
+              pagination: { '$ref' => '#/components/schemas/Pagination' }
+            }
+          },
+          Security: {
+            type: :object,
+            required: %w[id ticker kind offline created_at updated_at],
+            properties: {
+              id: { type: :string, format: :uuid },
+              ticker: { type: :string },
+              name: { type: :string, nullable: true },
+              kind: { type: :string, enum: %w[standard cash] },
+              country_code: { type: :string, nullable: true },
+              exchange_mic: { type: :string, nullable: true },
+              exchange_acronym: { type: :string, nullable: true },
+              exchange_operating_mic: { type: :string, nullable: true },
+              exchange_name: { type: :string, nullable: true },
+              offline: { type: :boolean },
+              offline_reason: { type: :string, nullable: true },
+              website_url: { type: :string, nullable: true },
+              logo_url: { type: :string, nullable: true },
+              first_provider_price_on: { type: :string, format: :date, nullable: true },
+              created_at: { type: :string, format: :'date-time' },
+              updated_at: { type: :string, format: :'date-time' }
+            }
+          },
+          SecurityCollection: {
+            type: :object,
+            required: %w[securities pagination],
+            properties: {
+              securities: {
+                type: :array,
+                items: { '$ref' => '#/components/schemas/Security' }
+              },
+              pagination: { '$ref' => '#/components/schemas/Pagination' }
+            }
+          },
+          SecurityPrice: {
+            type: :object,
+            required: %w[id date price price_amount currency provisional security created_at updated_at],
+            properties: {
+              id: { type: :string, format: :uuid },
+              date: { type: :string, format: :date },
+              price: { type: :string, description: 'Formatted security price' },
+              price_amount: { type: :string, description: 'Exact decimal security price' },
+              currency: { type: :string },
+              provisional: { type: :boolean },
+              security: {
+                type: :object,
+                required: %w[id ticker],
+                properties: {
+                  id: { type: :string, format: :uuid },
+                  ticker: { type: :string },
+                  name: { type: :string, nullable: true },
+                  exchange_operating_mic: { type: :string, nullable: true }
+                }
+              },
+              created_at: { type: :string, format: :'date-time' },
+              updated_at: { type: :string, format: :'date-time' }
+            }
+          },
+          SecurityPriceCollection: {
+            type: :object,
+            required: %w[security_prices pagination],
+            properties: {
+              security_prices: {
+                type: :array,
+                items: { '$ref' => '#/components/schemas/SecurityPrice' }
               },
               pagination: { '$ref' => '#/components/schemas/Pagination' }
             }
