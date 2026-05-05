@@ -6,6 +6,7 @@ zh-CN:
       no_budgets: 本月未设置预算分类
       over_by: 超支
       remaining: 剩余
+      shared: 共享
       spent: 已支出
       status:
         good: 正常执行
@@ -89,7 +90,9 @@ zh-CN:
       pagination:
         next: 下一页
         previous: 上一页
-        showing: 显示 %{count} 笔交易
+        showing:
+          one: 显示 %{count} 条记录
+          other: 显示 %{count} 条记录
       sort:
         amount_asc: 金额（从低到高）
         amount_desc: 金额（从高到低）
@@ -104,6 +107,9 @@ zh-CN:
         transactions: 笔交易
         type: 类型
         uncategorized: 未分类
+        entries:
+          one: "%{count} 条记录"
+          other: "%{count} 条记录"
       title: 交易明细分析
     net_worth:
       title: 资产净值

@@ -18,6 +18,7 @@ zh-CN:
       info_email: 电子邮箱：
       info_name: 姓名：
       submit_create: 创建账户
+      submit_accept_invitation: 接受邀请
       account_creation_disabled: 通过单点登录创建账户已禁用。请联系管理员。
       cancel: 取消
     new_user:
