@@ -53,6 +53,13 @@ zh-CN:
       update:
         success: 导入配置成功。
     confirms:
+      sure_import:
+        title: 确认导入
+        description: 请查看将从导出文件中导入的数据。
+        summary: 导入摘要
+        empty_summary: 在此文件中未找到可导入的记录。文件可能为空，或各行不符合预期的导出格式（每行应为包含「type」和「data」键的 JSON 对象，且类型须为本导入支持的类型）。
+        publish_button: 开始导入
+        cancel: 取消
       mappings:
         create_account: 新建账户
         csv_mapping_label: CSV 中的 %{mapping}
@@ -71,6 +78,15 @@ zh-CN:
         tag_mapping_title: 分配标签
     uploads:
       show:
+        qif_title: 上传 QIF 文件
+        qif_description: 选择此 QIF 文件所属的账户，然后上传来自 Quicken 的 .qif 导出文件。
+        qif_account_label: 账户
+        qif_account_placeholder: 选择账户…
+        qif_file_prompt: 将 QIF 文件拖放至此
+        qif_file_hint: 仅支持 .qif 文件
+        qif_submit: 上传 QIF
+        browse: 浏览
+        csv_file_prompt: 将 CSV 文件拖放至此
         description: 请在下方粘贴或上传您的 CSV 文件。开始前请仔细阅读下表中的说明。
         instructions_1: 下方是可供导入的 CSV 示例文件及列说明。
         instructions_2: 您的 CSV 文件必须包含表头行
@@ -78,6 +94,16 @@ zh-CN:
         instructions_4: 标有星号 (*) 的列为必填数据。
         instructions_5: 数字中请勿包含逗号、货币符号或括号。
         title: 导入数据
+      sure_import:
+        title: 从导出文件导入
+        description: 上传数据导出中的 all.ndjson 文件以恢复您的账户、交易、分类等数据。
+        drop_title: 拖放 NDJSON 文件以上传
+        drop_subtitle: 您的文件将自动上传
+        browse: 浏览
+        browse_hint: 将 all.ndjson 文件拖放至此
+        upload_button: 上传 NDJSON
+        hint_html: 上传数据导出 ZIP 中的 <strong>all.ndjson</strong> 文件
+        ndjson_invalid: 必须是包含至少一条记录的有效 NDJSON 文件
   imports:
     date_format:
       heading: 日期格式

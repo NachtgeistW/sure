@@ -1,0 +1,14 @@
+---
+zh-CN:
+  pending_duplicate_merges:
+    new:
+      title: 与已记账交易合并
+      warning_title: 手动合并重复项
+      warning_description: 用于手动将待处理交易与其已记账版本合并，此操作将删除待处理交易，仅保留已记账的那条。
+      pending_transaction: 待处理交易
+      select_posted: 选择要合并的已记账交易
+      showing_range: "显示 %{start} - %{end}"
+      previous: "← 前 10 条"
+      next: "后 10 条 →"
+      no_candidates: 此账户中未找到已记账交易。
+      submit_button: 合并交易

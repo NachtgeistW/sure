@@ -1,0 +1,7 @@
+---
+zh-CN:
+  transfer_matches:
+    new:
+      header:
+        title: 匹配转账或付款
+        subtitle: 在另一个账户中匹配对应的交易，或创建一条新交易。

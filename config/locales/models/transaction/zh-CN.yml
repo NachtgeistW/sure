@@ -1,0 +1,11 @@
+---
+zh-CN:
+  activerecord:
+    errors:
+      models:
+        transaction:
+          attributes:
+            attachments:
+              too_many: "每条交易附件数量不能超过 %{max} 个"
+              too_large: "第 %{index} 个文件过大（最大 %{max_mb}MB）"
+              invalid_format: "第 %{index} 个文件格式不支持（%{file_format}）"

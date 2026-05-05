@@ -25,8 +25,85 @@ zh-CN:
       edit_merchants: 编辑商户
       edit_tags: 编辑标签
       import: 导入
+    unknown_name: 未知交易
+    new:
+      new_transaction: 新建交易
+    potential_duplicate_title: 检测到可能的重复项
+    potential_duplicate_description: 此待处理交易可能与下方的已记账交易相同，如果是，请合并以避免重复计算。
+    merge_duplicate: 是的，合并它们
+    keep_both: 不，保留两条
+    split_parent_row:
+      split_label: "拆分"
+    activity_labels:
+      buy: 买入
+      sell: 卖出
+      sweep_in: 资金转入
+      sweep_out: 资金转出
+      dividend: 股息
+      reinvestment: 再投资
+      interest: 利息
+      fee: 费用
+      transfer: 转账
+      contribution: 投入
+      withdrawal: 提取
+      exchange: 兑换
+      other: 其他
+    merge_duplicate:
+      success: 交易已成功合并
+      failure: 合并交易失败
+    dismiss_duplicate:
+      success: 已保留为独立交易
+      failure: 无法取消重复建议
+    pending_duplicate_merge:
+      possible_duplicate: 重复？
+      possible_duplicate_short: 重复？
+      review_recommended: 审核
+      review_recommended_short: 审核
+      confirm_title: "与已记账交易合并（%{posted_amount}）"
+      reject_title: 保留为独立交易
+    summary:
+      total_transactions: 交易总数
+      income: 收入
+      expenses: 支出
+      inflow: 流入
+      outflow: 流出
+    selection_bar:
+      duplicate: 重复
+      edit: 编辑
+    bulk_updates:
+      new:
+        name_label: 名称
+        name_placeholder: 输入将应用于所选交易的名称
+    attachments:
+      cannot_exceed: "每条交易附件数量不能超过 %{count} 个"
+      uploaded_one: "附件上传成功"
+      uploaded_many: "%{count} 个附件上传成功"
+      failed_upload: "附件上传失败：%{error}"
+      no_files_selected: "未选择要上传的文件"
+      attachment_deleted: "附件删除成功"
+      failed_delete: "附件删除失败：%{error}"
+      upload_failed: "附件上传失败，请重试或联系支持。"
+      delete_failed: "附件删除失败，请重试或联系支持。"
+      upload: "上传"
+      no_attachments: "暂无附件"
+      select_up_to: "最多选择 %{count} 个文件（图片或 PDF，每个最大 %{size}MB）• 已使用 %{used}/%{count}"
+      files:
+        one: "文件 (1)"
+        other: "文件 (%{count})"
+      browse_to_add: "浏览文件以添加"
+      max_reached: "已达文件数量上限（%{count}/%{max}），请先删除一个已有文件再上传。"
     transaction:
+      pending: 待处理
+      pending_tooltip: 待处理交易 — 记账后可能发生变化
       linked_with_provider: 已与 %{provider} 关联
+      activity_type_tooltip: 投资活动类型
+      possible_duplicate: 重复？
+      potential_duplicate_tooltip: 此交易可能与另一条交易重复
+      review_recommended: 审核
+      review_recommended_tooltip: 金额差异较大 — 建议审核是否为重复交易
+      split: 拆分
+      split_tooltip: 此交易已拆分为多条记录
+      split_child_tooltip: 属于拆分交易的一部分
     index:
       import: 导入
       categorize_button:
@@ -136,10 +213,15 @@ zh-CN:
           on_or_after: 在 %{date} 或之后
           on_or_before: 在 %{date} 或之前
           transfer: 转账
+          confirmed: 已确认
+          pending: 待处理
         type_filter:
           expense: 支出
           income: 收入
           transfer: 转账
+        status_filter:
+          confirmed: 已确认
+          pending: 待处理
       menu:
         account_filter: 账户
         amount_filter: 金额
@@ -149,6 +231,7 @@ zh-CN:
         clear_filters: 清除筛选
         date_filter: 日期
         merchant_filter: 商户
+        status_filter: 状态
         tag_filter: 标签
         type_filter: 类型
       search:
@@ -166,6 +249,20 @@ zh-CN:
       delete_subtitle: 此操作将永久删除该交易，影响历史余额数据，且不可恢复。
       delete_title: 删除交易
       details: 详情
+      attachments: 附件
+      exclude: 排除
+      exclude_description: 已排除的交易将从预算计算和报告中移除。
+      activity_type: 活动类型
+      activity_type_description: 投资活动类型（买入、卖出、股息等），自动识别或手动设置。
+      one_time_title: 一次性%{type}
+      one_time_description: 一次性交易将从某些预算计算和报告中排除，帮助您关注真正重要的内容。
+      convert_to_trade_title: 转换为证券交易
+      convert_to_trade_description: 将此交易转换为含证券详情的买入或卖出交易，用于投资组合跟踪。
+      convert_to_trade_button: 转换为交易
+      transfer_matcher_description: 将此交易与另一账户中的对应交易关联。
+      pending_duplicate_merger_title: 与已记账交易重复？
+      pending_duplicate_merger_description: 手动将此待处理交易与其已记账版本合并。
+      pending_duplicate_merger_button: 打开合并工具
       mark_recurring: 标记为定期交易
       mark_recurring_subtitle: 将此交易标记为定期交易跟踪。金额波动将根据过去6个月的类似交易自动计算。
       mark_recurring_title: 定期交易设置
@@ -178,4 +275,6 @@ zh-CN:
       overview: 概览
       settings: 设置
       tags_label: 标签
+      tab_transactions: 交易
+      tab_upcoming: 即将到来
       uncategorized: "（未分类）"
