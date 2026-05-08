@@ -44,9 +44,8 @@ en:
         split_grouped_description: Show split transactions grouped under their parent in the transaction list. When off, split children appear as individual rows.
         color_convention_title: Profit/Loss Colors
         color_convention_subtitle: Choose which color represents profit (up) and loss (down)
-        color_convention_follow_region: Follow Country/Region
-        color_convention_green_up: "Green \U0001F4C8, Red \U0001F4C9"
-        color_convention_red_up: "Red \U0001F4C8, Green \U0001F4C9"
+        color_convention_local_market: Local Market
+        color_convention_international: International
     preferences:
       show:
         country: Country
