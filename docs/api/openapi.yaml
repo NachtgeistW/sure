@@ -460,6 +460,276 @@ components:
         updated_at:
           type: string
           format: date-time
+    BudgetSummary:
+      type: object
+      required:
+      - id
+      - start_date
+      - end_date
+      - name
+      - currency
+      - initialized
+      - current
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        name:
+          type: string
+        currency:
+          type: string
+        initialized:
+          type: boolean
+        current:
+          type: boolean
+        budgeted_spending:
+          type: string
+          nullable: true
+        budgeted_spending_cents:
+          type: integer
+          nullable: true
+        expected_income:
+          type: string
+          nullable: true
+        expected_income_cents:
+          type: integer
+          nullable: true
+        allocated_spending:
+          type: string
+        allocated_spending_cents:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Budget:
+      type: object
+      required:
+      - id
+      - start_date
+      - end_date
+      - name
+      - currency
+      - initialized
+      - current
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        name:
+          type: string
+        currency:
+          type: string
+        initialized:
+          type: boolean
+        current:
+          type: boolean
+        budgeted_spending:
+          type: string
+          nullable: true
+        budgeted_spending_cents:
+          type: integer
+          nullable: true
+        expected_income:
+          type: string
+          nullable: true
+        expected_income_cents:
+          type: integer
+          nullable: true
+        allocated_spending:
+          type: string
+        allocated_spending_cents:
+          type: integer
+        actual_spending:
+          type: string
+        actual_spending_cents:
+          type: integer
+        actual_income:
+          type: string
+        actual_income_cents:
+          type: integer
+        available_to_spend:
+          type: string
+        available_to_spend_cents:
+          type: integer
+        available_to_allocate:
+          type: string
+        available_to_allocate_cents:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    BudgetCollection:
+      type: object
+      required:
+      - budgets
+      - pagination
+      properties:
+        budgets:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BudgetSummary"
+        pagination:
+          "$ref": "#/components/schemas/Pagination"
+    BudgetCategorySummary:
+      type: object
+      required:
+      - id
+      - budget_id
+      - currency
+      - subcategory
+      - inherits_parent_budget
+      - category
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        budget_id:
+          type: string
+          format: uuid
+        currency:
+          type: string
+        subcategory:
+          type: boolean
+        inherits_parent_budget:
+          type: boolean
+        budgeted_spending:
+          type: string
+        budgeted_spending_cents:
+          type: integer
+        display_budgeted_spending:
+          type: string
+        display_budgeted_spending_cents:
+          type: integer
+        category:
+          type: object
+          required:
+          - id
+          - name
+          - color
+          - lucide_icon
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            color:
+              type: string
+            lucide_icon:
+              type: string
+            parent_id:
+              type: string
+              format: uuid
+              nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    BudgetCategory:
+      type: object
+      required:
+      - id
+      - budget_id
+      - currency
+      - subcategory
+      - inherits_parent_budget
+      - category
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        budget_id:
+          type: string
+          format: uuid
+        currency:
+          type: string
+        subcategory:
+          type: boolean
+        inherits_parent_budget:
+          type: boolean
+        budgeted_spending:
+          type: string
+        budgeted_spending_cents:
+          type: integer
+        display_budgeted_spending:
+          type: string
+        display_budgeted_spending_cents:
+          type: integer
+        actual_spending:
+          type: string
+        actual_spending_cents:
+          type: integer
+        available_to_spend:
+          type: string
+        available_to_spend_cents:
+          type: integer
+        category:
+          type: object
+          required:
+          - id
+          - name
+          - color
+          - lucide_icon
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            color:
+              type: string
+            lucide_icon:
+              type: string
+            parent_id:
+              type: string
+              format: uuid
+              nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    BudgetCategoryCollection:
+      type: object
+      required:
+      - budget_categories
+      - pagination
+      properties:
+        budget_categories:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BudgetCategorySummary"
+        pagination:
+          "$ref": "#/components/schemas/Pagination"
     Balance:
       type: object
       required:
@@ -672,6 +942,33 @@ components:
             "$ref": "#/components/schemas/CategoryDetail"
         pagination:
           "$ref": "#/components/schemas/Pagination"
+    CategoryCreateRequest:
+      type: object
+      required:
+      - category
+      properties:
+        category:
+          type: object
+          required:
+          - name
+          properties:
+            name:
+              type: string
+              description: Category name (required, unique within family)
+            color:
+              type: string
+              description: 'Hex color code (e.g. #22c55e). Defaults to #6172F3 if
+                omitted; subcategories inherit parent color.'
+            icon:
+              type: string
+              description: Lucide icon name (e.g. "coffee"). Auto-suggested from the
+                name when omitted.
+            parent_id:
+              type: string
+              format: uuid
+              nullable: true
+              description: Parent category ID. Must belong to the same family. Categories
+                support up to 2 levels of nesting.
     Merchant:
       type: object
       required:
@@ -1458,6 +1755,164 @@ components:
       properties:
         data:
           "$ref": "#/components/schemas/ImportDetail"
+    ProviderConnectionInstitution:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          nullable: true
+        domain:
+          type: string
+          nullable: true
+        url:
+          type: string
+          nullable: true
+    ProviderConnectionAccounts:
+      type: object
+      required:
+      - total_count
+      - linked_count
+      - unlinked_count
+      properties:
+        total_count:
+          type: integer
+          minimum: 0
+        linked_count:
+          type: integer
+          minimum: 0
+        unlinked_count:
+          type: integer
+          minimum: 0
+    ProviderConnectionSyncLatest:
+      type: object
+      required:
+      - id
+      - status
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        syncing_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        failed_at:
+          type: string
+          format: date-time
+          nullable: true
+        error:
+          type: object
+          nullable: true
+          description: Sanitized latest sync error summary. Null when the latest sync
+            is not failed or stale.
+          required:
+          - present
+          properties:
+            present:
+              type: boolean
+              description: Always true when this object is present.
+            message:
+              type: string
+              nullable: true
+              description: Stable sanitized error category message; raw provider error
+                text is never exposed.
+    ProviderConnectionSync:
+      type: object
+      required:
+      - syncing
+      properties:
+        syncing:
+          type: boolean
+        status_summary:
+          type: string
+          nullable: true
+        last_synced_at:
+          type: string
+          format: date-time
+          nullable: true
+        latest:
+          allOf:
+          - "$ref": "#/components/schemas/ProviderConnectionSyncLatest"
+          nullable: true
+    ProviderConnection:
+      type: object
+      required:
+      - id
+      - provider
+      - provider_type
+      - name
+      - status
+      - requires_update
+      - credentials_configured
+      - scheduled_for_deletion
+      - pending_account_setup
+      - institution
+      - accounts
+      - sync
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+        provider_type:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          nullable: true
+        requires_update:
+          type: boolean
+          nullable: true
+          description: False when the provider item does not expose this status.
+        credentials_configured:
+          type: boolean
+          nullable: true
+          description: False when credential readiness is unknown.
+        scheduled_for_deletion:
+          type: boolean
+          nullable: true
+          description: False when the provider item does not expose this status.
+        pending_account_setup:
+          type: boolean
+          nullable: true
+          description: False when account setup state is unknown.
+        institution:
+          "$ref": "#/components/schemas/ProviderConnectionInstitution"
+        accounts:
+          "$ref": "#/components/schemas/ProviderConnectionAccounts"
+        sync:
+          "$ref": "#/components/schemas/ProviderConnectionSync"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ProviderConnectionCollection:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ProviderConnection"
     ImportRowMapping:
       type: object
       required:
@@ -1617,6 +2072,119 @@ components:
             per_page:
               type: integer
               minimum: 1
+    SyncableSummary:
+      type: object
+      required:
+      - type
+      - id
+      properties:
+        type:
+          type: string
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          nullable: true
+    SyncErrorSummary:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+    SyncResource:
+      type: object
+      required:
+      - id
+      - status
+      - in_progress
+      - terminal
+      - syncable
+      - children_count
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - pending
+          - syncing
+          - completed
+          - failed
+          - stale
+        in_progress:
+          type: boolean
+        terminal:
+          type: boolean
+        syncable:
+          "$ref": "#/components/schemas/SyncableSummary"
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        children_count:
+          type: integer
+          minimum: 0
+        window_start_date:
+          type: string
+          format: date
+          nullable: true
+        window_end_date:
+          type: string
+          format: date
+          nullable: true
+        pending_at:
+          type: string
+          format: date-time
+          nullable: true
+        syncing_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        failed_at:
+          type: string
+          format: date-time
+          nullable: true
+        error:
+          nullable: true
+          allOf:
+          - "$ref": "#/components/schemas/SyncErrorSummary"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    SyncResponse:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          nullable: true
+          allOf:
+          - "$ref": "#/components/schemas/SyncResource"
+    SyncCollection:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            "$ref": "#/components/schemas/SyncResource"
+        meta:
+          "$ref": "#/components/schemas/Pagination"
     Trade:
       type: object
       required:
@@ -2774,6 +3342,220 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/budget_categories":
+    get:
+      summary: List budget categories
+      tags:
+      - Budget Categories
+      security:
+      - apiKeyAuth: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        description: 'Page number (default: 1)'
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        description: 'Items per page (default: 25, max: 100)'
+        schema:
+          type: integer
+      - name: budget_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Filter by budget ID
+      - name: category_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Filter by category ID
+      - name: start_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Filter budget categories whose budget starts on or after this
+          date
+      - name: end_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Filter budget categories whose budget ends on or before this
+          date
+      responses:
+        '200':
+          description: budget categories listed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BudgetCategoryCollection"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: insufficient scope
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: invalid filter
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/budget_categories/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      description: Budget category ID
+      schema:
+        type: string
+        format: uuid
+    get:
+      summary: Retrieve a budget category
+      tags:
+      - Budget Categories
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: budget category retrieved
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BudgetCategory"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: insufficient scope
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: budget category not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/budgets":
+    get:
+      summary: List budgets
+      tags:
+      - Budgets
+      security:
+      - apiKeyAuth: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        description: 'Page number (default: 1)'
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        description: 'Items per page (default: 25, max: 100)'
+        schema:
+          type: integer
+      - name: start_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Filter budgets starting on or after this date
+      - name: end_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Filter budgets ending on or before this date
+      responses:
+        '200':
+          description: budgets listed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BudgetCollection"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: insufficient scope
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: invalid date filter
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/budgets/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      description: Budget ID
+      schema:
+        type: string
+        format: uuid
+    get:
+      summary: Retrieve a budget
+      tags:
+      - Budgets
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: budget retrieved
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Budget"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: insufficient scope
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: budget not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/categories":
     get:
       summary: List categories
@@ -2814,6 +3596,50 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/CategoryCollection"
+    post:
+      summary: Create category
+      tags:
+      - Categories
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: subcategory created with parent
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CategoryDetail"
+        '422':
+          description: validation error - duplicate name
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: forbidden - api key missing read_write scope
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '400':
+          description: bad request - missing category payload
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '401':
+          description: unauthorized - missing api key
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CategoryCreateRequest"
+        required: true
   "/api/v1/categories/{id}":
     parameters:
     - name: id
@@ -3780,6 +4606,35 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/provider_connections":
+    get:
+      summary: Lists provider connection status summaries
+      description: List safe provider connection status metadata for the authenticated
+        user's family without exposing credentials, raw provider payloads, or raw
+        sync errors.
+      tags:
+      - Provider Connections
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: provider connection status summaries listed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ProviderConnectionCollection"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: insufficient scope
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/recurring_transactions":
     get:
       summary: List recurring transactions
@@ -4516,6 +5371,115 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
         '404':
           description: security price not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/syncs":
+    get:
+      summary: Lists sync history
+      description: List sanitized sync status history for the authenticated user's
+        family, accounts, and provider connections.
+      tags:
+      - Syncs
+      security:
+      - apiKeyAuth: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        description: 'Page number (default: 1)'
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        description: 'Items per page (default: 25, max: 100)'
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: syncs listed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SyncCollection"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/syncs/latest":
+    get:
+      summary: Shows the latest sync
+      description: 'Return the most recently created sanitized sync status for the
+        authenticated user''s family, or data: null when no sync exists.'
+      tags:
+      - Syncs
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: latest sync shown
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SyncResponse"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/syncs/{id}":
+    parameters:
+    - name: id
+      in: path
+      format: uuid
+      required: true
+      schema:
+        type: string
+    get:
+      summary: Shows a sync
+      description: Return sanitized status metadata for a single family-scoped sync.
+      tags:
+      - Syncs
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: sync shown
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SyncResponse"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: not found
           content:
             application/json:
               schema:
