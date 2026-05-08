@@ -4,6 +4,9 @@ class Family < ApplicationRecord
   include CoinbaseConnectable, BinanceConnectable, CoinstatsConnectable, SnaptradeConnectable, MercuryConnectable, SophtronConnectable
   include IndexaCapitalConnectable
 
+  # Countries where red = profit (up) and green = loss (down)
+  RED_UP_COUNTRIES = %w[CN HK TW JP KR VN].freeze
+
   DATE_FORMATS = [
     [ "MM-DD-YYYY", "%m-%d-%Y" ],
     [ "DD.MM.YYYY", "%d.%m.%Y" ],
@@ -253,6 +256,10 @@ class Family < ApplicationRecord
 
   def eu?
     country != "US" && country != "CA"
+  end
+
+  def color_convention
+    RED_UP_COUNTRIES.include?(country) ? "red_up" : "green_up"
   end
 
   def requires_securities_data_provider?

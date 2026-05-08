@@ -81,11 +81,11 @@ class Trend
 
   private
     def red_hex
-      "var(--color-destructive)"
+      "var(--color-loss)"
     end
 
     def green_hex
-      "var(--color-success)"
+      "var(--color-profit)"
     end
 
     def gray_hex

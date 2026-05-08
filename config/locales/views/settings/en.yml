@@ -42,6 +42,11 @@ en:
         dashboard_two_column_description: Display dashboard widgets in two columns on large screens. When off, widgets stack in a single column.
         split_grouped_title: Group split transactions
         split_grouped_description: Show split transactions grouped under their parent in the transaction list. When off, split children appear as individual rows.
+        color_convention_title: Profit/Loss Colors
+        color_convention_subtitle: Choose which color represents profit (up) and loss (down)
+        color_convention_follow_region: Follow Country/Region
+        color_convention_green_up: "Green \U0001F4C8, Red \U0001F4C9"
+        color_convention_red_up: "Red \U0001F4C8, Green \U0001F4C9"
     preferences:
       show:
         country: Country
