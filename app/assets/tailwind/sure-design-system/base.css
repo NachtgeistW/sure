@@ -1,13 +1,13 @@
-/* Profit/loss color convention — default: green=profit, red=loss */
-:root {
-  --color-profit: var(--color-success);
-  --color-loss: var(--color-destructive);
+/* Flipped profit/loss color convention — used in CN, JP, KR, etc.
+   Swaps --color-success and --color-destructive so red = profit (up), green = loss (down). */
+[data-color-convention="red_up"] {
+  --color-success: var(--color-red-600);
+  --color-destructive: var(--color-green-600);
 }
 
-/* Flipped convention: red=profit (up), green=loss (down) — used in CN, JP, KR, etc. */
-[data-color-convention="red_up"] {
-  --color-profit: var(--color-destructive);
-  --color-loss: var(--color-success);
+[data-color-convention="red_up"][data-theme="dark"] {
+  --color-success: var(--color-red-400);
+  --color-destructive: var(--color-green-500);
 }
 
 @layer base {
