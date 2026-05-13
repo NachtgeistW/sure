@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 
 <% theme = Current.user&.theme || "system" %>
+<% color_convention = Current.user&.resolved_color_convention || "green_up" %>
 
 <html
   lang="en"
   data-theme="<%= theme %>"
+  data-color-convention="<%= color_convention %>"
   data-controller="theme viewport"
   data-theme-user-preference-value="<%= Current.user&.theme || "system" %>"
   class="h-[var(--app-height, 100dvh)] text-primary bg-surface overflow-hidden overscroll-none font-sans <%= @os %>">
