@@ -365,6 +365,23 @@ class User < ApplicationRecord
     preferences&.dig("dashboard_two_column") == true
   end
 
+  COLOR_CONVENTIONS = %w[local_market international].freeze
+
+  def profit_loss_color_convention
+    preferences&.dig("profit_loss_color_convention").presence_in(COLOR_CONVENTIONS) || "local_market"
+  end
+
+  def resolved_color_convention
+    case profit_loss_color_convention
+    when "local_market"
+      family&.color_convention || "green_up"
+    when "international"
+      "green_up"
+    else
+      "green_up"
+    end
+  end
+
   def update_transactions_preferences(prefs)
     transaction do
       lock!
