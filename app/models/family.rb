@@ -5,7 +5,10 @@ class Family < ApplicationRecord
   include IndexaCapitalConnectable
 
   # Countries where red = profit (up) and green = loss (down)
-  RED_UP_COUNTRIES = %w[CN HK TW JP KR VN].freeze
+  RED_UP_COUNTRIES = %w[CN HK TW JP VN].freeze
+
+  # Countries where red = profit (up) and blue = loss (down)
+  BLUE_DOWN_COUNTRIES = %w[KR].freeze
 
   DATE_FORMATS = [
     [ "MM-DD-YYYY", "%m-%d-%Y" ],
@@ -259,7 +262,13 @@ class Family < ApplicationRecord
   end
 
   def color_convention
-    RED_UP_COUNTRIES.include?(country) ? "red_up" : "green_up"
+    if BLUE_DOWN_COUNTRIES.include?(country)
+      "blue_down"
+    elsif RED_UP_COUNTRIES.include?(country)
+      "red_up"
+    else
+      "green_up"
+    end
   end
 
   def requires_securities_data_provider?

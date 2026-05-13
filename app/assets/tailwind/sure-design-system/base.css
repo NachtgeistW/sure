@@ -1,4 +1,4 @@
-/* Flipped profit/loss color convention — used in CN, JP, KR, etc.
+/* Flipped profit/loss color convention — used in CN, HK, TW, JP, VN, etc.
    Swaps --color-success and --color-destructive so red = profit (up), green = loss (down). */
 [data-color-convention="red_up"] {
   --color-success: var(--color-red-600);
@@ -8,6 +8,17 @@
 [data-color-convention="red_up"][data-theme="dark"] {
   --color-success: var(--color-red-400);
   --color-destructive: var(--color-green-500);
+}
+
+/* Korean convention: red = profit (up), blue = loss (down) */
+[data-color-convention="blue_down"] {
+  --color-success: var(--color-red-600);
+  --color-destructive: var(--color-blue-600);
+}
+
+[data-color-convention="blue_down"][data-theme="dark"] {
+  --color-success: var(--color-red-400);
+  --color-destructive: var(--color-blue-400);
 }
 
 @layer base {
