@@ -49,6 +49,31 @@
   </div>
 <% end %>
 
+<%= settings_section title: t(".color_convention_title"), subtitle: t(".color_convention_subtitle") do %>
+  <div>
+    <%= form_with url: settings_appearance_path, method: :patch,
+          class: "p-3",
+          data: { controller: "auto-submit-form color-convention" } do |f| %>
+      <div class="flex flex-col gap-3">
+        <% User::COLOR_CONVENTIONS.each do |convention| %>
+          <%= f.label :"profit_loss_color_convention_#{convention}", for: "user_profit_loss_color_convention_#{convention}", class: "flex items-center gap-3 cursor-pointer" do %>
+            <%= f.radio_button :profit_loss_color_convention, convention,
+                  name: "user[profit_loss_color_convention]",
+                  id: "user_profit_loss_color_convention_#{convention}",
+                  checked: @user.profit_loss_color_convention == convention,
+                  class: "sr-only",
+                  data: { auto_submit_form_target: "auto", action: "change->color-convention#update" } %>
+            <span class="flex items-center justify-center w-4 h-4 rounded-full border border-primary shrink-0 [label:has(input:checked)_&]:bg-gray-900 [label:has(input:checked)_&]:border-gray-900">
+              <span class="w-1.5 h-1.5 rounded-full bg-white hidden [label:has(input:checked)_&]:block"></span>
+            </span>
+            <span class="text-sm text-primary"><%= t(".color_convention_#{convention}") %></span>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
 <%= settings_section title: t(".transactions_title"), subtitle: t(".transactions_subtitle") do %>
   <div>
     <%= form_with url: settings_appearance_path, method: :patch,

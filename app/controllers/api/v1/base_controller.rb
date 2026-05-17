@@ -3,10 +3,13 @@
 class Api::V1::BaseController < ApplicationController
   include Doorkeeper::Rails::Helpers
 
-  UUID_PATTERN = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i
-  private_constant :UUID_PATTERN
-
   InvalidFilterError = Class.new(StandardError)
+
+  class << self
+    def valid_uuid?(value)
+      UuidFormat.valid?(value)
+    end
+  end
 
   # Skip regular session-based authentication for API
   skip_authentication
@@ -62,7 +65,7 @@ class Api::V1::BaseController < ApplicationController
       # Check token validity and scope (read_write includes read access)
       has_sufficient_scope = access_token&.scopes&.include?("read") || access_token&.scopes&.include?("read_write")
 
-      unless access_token && !access_token.expired? && has_sufficient_scope
+      unless access_token&.accessible? && has_sufficient_scope
         render_json({ error: "unauthorized", message: "Access token is invalid, expired, or missing required scope" }, status: :unauthorized)
         return false
       end
@@ -210,13 +213,17 @@ class Api::V1::BaseController < ApplicationController
       true
     end
 
+    def ensure_read_scope
+      authorize_scope!(:read)
+    end
+
     # Consistent JSON response method
     def render_json(data, status: :ok)
       render json: data, status: status
     end
 
     def valid_uuid?(value)
-      value.to_s.match?(UUID_PATTERN)
+      self.class.valid_uuid?(value)
     end
 
     def safe_page_param

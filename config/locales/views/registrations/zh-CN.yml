@@ -18,6 +18,7 @@ zh-CN:
       join_family_title: 加入 %{family}
       password_placeholder: 请输入密码
       role_admin: 管理员
+      role_guest: 访客
       role_member: 成员
       submit: 创建账户
       title: 创建您的账户

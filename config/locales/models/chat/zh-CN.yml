@@ -1,0 +1,8 @@
+---
+zh-CN:
+  chat:
+    errors:
+      rate_limited: "AI 提供商当前请求过于频繁，请稍后重试。"
+      temporarily_unavailable: "AI 提供商暂时不可用，请稍后重试。"
+      misconfigured: "AI 提供商配置有误，请联系管理员。"
+      default: "生成响应失败，请重试。"

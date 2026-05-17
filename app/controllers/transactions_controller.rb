@@ -27,6 +27,7 @@ class TransactionsController < ApplicationController
                        )
 
     @pagy, @transactions = pagy(base_scope, limit: safe_per_page)
+    Transaction::ActivitySecurityPreloader.new(@transactions).preload
 
     # Preload split parent data
     entry_ids = @transactions.map { |t| t.entry.id }
@@ -106,7 +107,7 @@ class TransactionsController < ApplicationController
       @entry.mark_user_modified!
       @entry.transaction.lock_attr!(:tag_ids) if @entry.transaction.tags.any?
 
-      flash[:notice] = "Transaction created"
+      flash[:notice] = t(".created")
 
       respond_to do |format|
         format.html { redirect_back_or_to account_path(@entry.account) }
@@ -140,8 +141,9 @@ class TransactionsController < ApplicationController
       @entry.reload
 
       respond_to do |format|
-        format.html { redirect_back_or_to account_path(@entry.account), notice: "Transaction updated" }
+        format.html { redirect_back_or_to account_path(@entry.account), notice: t(".updated") }
         format.turbo_stream do
+          in_split_group = helpers.in_split_group?(@entry, params[:grouped])
           render turbo_stream: [
             turbo_stream.replace(
               dom_id(@entry, :header),
@@ -158,7 +160,11 @@ class TransactionsController < ApplicationController
               partial: "transactions/notes",
               locals: { entry: @entry, can_annotate: can_annotate_entry? }
             ) if params[:entry]&.key?(:notes) && notes_changed),
-            turbo_stream.replace(@entry),
+            turbo_stream.replace(
+              dom_id(@entry),
+              partial: "entries/entry",
+              locals: { entry: @entry, in_split_group: in_split_group }
+            ),
             *flash_notification_stream_items
           ].compact
         end
@@ -180,7 +186,9 @@ class TransactionsController < ApplicationController
     end
 
     redirect_to transactions_path
-  rescue ActiveRecord::RecordNotDestroyed, ActiveRecord::RecordInvalid => e
+  rescue ActiveRecord::RecordNotFound, ActiveRecord::RecordInvalid,
+         ActiveRecord::RecordNotDestroyed, ActiveRecord::Deadlocked,
+         ActiveRecord::LockWaitTimeout => e
     Rails.logger.error("Failed to merge duplicate transaction #{params[:id]}: #{e.message}")
     flash[:alert] = t("transactions.merge_duplicate.failure")
     redirect_to transactions_path

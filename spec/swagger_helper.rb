@@ -788,6 +788,8 @@ RSpec.configure do |config|
               currency: { type: :string },
               name: { type: :string },
               notes: { type: :string, nullable: true },
+              external_id: { type: :string, nullable: true },
+              source: { type: :string, nullable: true },
               classification: { type: :string },
               account: { '$ref' => '#/components/schemas/Account' },
               category: { '$ref' => '#/components/schemas/Category', nullable: true },
@@ -808,6 +810,80 @@ RSpec.configure do |config|
               transactions: {
                 type: :array,
                 items: { '$ref' => '#/components/schemas/Transaction' }
+              },
+              pagination: { '$ref' => '#/components/schemas/Pagination' }
+            }
+          },
+          TransferTransactionSide: {
+            type: :object,
+            required: %w[id entry_id date amount amount_cents currency name kind account],
+            properties: {
+              id: { type: :string, format: :uuid },
+              entry_id: { type: :string, format: :uuid },
+              date: { type: :string, format: :date },
+              amount: { type: :string },
+              amount_cents: { type: :integer, description: 'Signed amount in currency minor units' },
+              currency: { type: :string },
+              name: { type: :string },
+              kind: { type: :string },
+              account: {
+                type: :object,
+                required: %w[id name account_type],
+                properties: {
+                  id: { type: :string, format: :uuid },
+                  name: { type: :string },
+                  account_type: { type: :string, nullable: true }
+                }
+              }
+            }
+          },
+          TransferDecision: {
+            type: :object,
+            required: %w[id status date amount amount_cents currency transfer_type inflow_transaction outflow_transaction created_at updated_at],
+            properties: {
+              id: { type: :string, format: :uuid },
+              status: { type: :string, enum: %w[pending confirmed] },
+              date: { type: :string, format: :date },
+              amount: { type: :string },
+              amount_cents: { type: :integer, description: 'Absolute transfer amount in currency minor units' },
+              currency: { type: :string },
+              transfer_type: { type: :string, enum: %w[transfer liability_payment loan_payment] },
+              notes: { type: :string, nullable: true },
+              inflow_transaction: { '$ref' => '#/components/schemas/TransferTransactionSide' },
+              outflow_transaction: { '$ref' => '#/components/schemas/TransferTransactionSide' },
+              created_at: { type: :string, format: :'date-time' },
+              updated_at: { type: :string, format: :'date-time' }
+            }
+          },
+          TransferDecisionCollection: {
+            type: :object,
+            required: %w[transfers pagination],
+            properties: {
+              transfers: {
+                type: :array,
+                items: { '$ref' => '#/components/schemas/TransferDecision' }
+              },
+              pagination: { '$ref' => '#/components/schemas/Pagination' }
+            }
+          },
+          RejectedTransfer: {
+            type: :object,
+            required: %w[id inflow_transaction outflow_transaction created_at updated_at],
+            properties: {
+              id: { type: :string, format: :uuid },
+              inflow_transaction: { '$ref' => '#/components/schemas/TransferTransactionSide' },
+              outflow_transaction: { '$ref' => '#/components/schemas/TransferTransactionSide' },
+              created_at: { type: :string, format: :'date-time' },
+              updated_at: { type: :string, format: :'date-time' }
+            }
+          },
+          RejectedTransferCollection: {
+            type: :object,
+            required: %w[rejected_transfers pagination],
+            properties: {
+              rejected_transfers: {
+                type: :array,
+                items: { '$ref' => '#/components/schemas/RejectedTransfer' }
               },
               pagination: { '$ref' => '#/components/schemas/Pagination' }
             }
@@ -869,6 +945,94 @@ RSpec.configure do |config|
               invalid_rows_count: { type: :integer, minimum: 0 },
               mappings_count: { type: :integer, minimum: 0 },
               unassigned_mappings_count: { type: :integer, minimum: 0 }
+            }
+          },
+          ImportPreflightContent: {
+            type: :object,
+            required: %w[filename content_type byte_size],
+            properties: {
+              filename: { type: :string },
+              content_type: { type: :string },
+              byte_size: { type: :integer, minimum: 0 }
+            }
+          },
+          ImportPreflightError: {
+            type: :object,
+            required: %w[code message],
+            properties: {
+              code: { type: :string },
+              message: { type: :string }
+            }
+          },
+          ImportPreflightStats: {
+            type: :object,
+            required: %w[rows_count],
+            properties: {
+              rows_count: {
+                type: :integer,
+                minimum: 0,
+                description: 'CSV parsed non-header rows, or nonblank Sure NDJSON lines.'
+              },
+              valid_rows_count: {
+                type: :integer,
+                minimum: 0,
+                description: 'SureImport only. Valid NDJSON records.'
+              },
+              invalid_rows_count: {
+                type: :integer,
+                minimum: 0,
+                description: 'SureImport only. Invalid NDJSON records. CSV malformed content returns a 422 instead.'
+              },
+              entity_counts: {
+                type: :object,
+                additionalProperties: { type: :integer },
+                nullable: true
+              },
+              record_type_counts: {
+                type: :object,
+                additionalProperties: { type: :integer },
+                nullable: true
+              }
+            }
+          },
+          ImportPreflight: {
+            type: :object,
+            required: %w[type valid content stats errors warnings],
+            properties: {
+              type: { type: :string, enum: %w[TransactionImport TradeImport AccountImport MintImport CategoryImport RuleImport SureImport] },
+              valid: { type: :boolean },
+              content: { '$ref' => '#/components/schemas/ImportPreflightContent' },
+              stats: { '$ref' => '#/components/schemas/ImportPreflightStats' },
+              headers: {
+                type: :array,
+                items: { type: :string },
+                nullable: true
+              },
+              required_headers: {
+                type: :array,
+                items: { type: :string },
+                nullable: true
+              },
+              missing_required_headers: {
+                type: :array,
+                items: { type: :string },
+                nullable: true
+              },
+              errors: {
+                type: :array,
+                items: { '$ref' => '#/components/schemas/ImportPreflightError' }
+              },
+              warnings: {
+                type: :array,
+                items: { type: :string }
+              }
+            }
+          },
+          ImportPreflightResponse: {
+            type: :object,
+            required: %w[data],
+            properties: {
+              data: { '$ref' => '#/components/schemas/ImportPreflight' }
             }
           },
           ImportStatusSummary: {

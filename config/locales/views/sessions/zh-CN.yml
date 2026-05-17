@@ -3,10 +3,16 @@ zh-CN:
   sessions:
     create:
       invalid_credentials: 邮箱或密码无效。
+      local_login_disabled: 本地密码登录已禁用，请使用单点登录。
     destroy:
+      logout_successful: 您已成功退出登录。
+    post_logout:
       logout_successful: 您已成功退出登录。
     failure:
       failed: 认证失败。
+      sso_provider_unavailable: "SSO 提供商当前不可用，请稍后重试或联系管理员。"
+      sso_invalid_response: "收到 SSO 提供商的无效响应，请重试。"
+      sso_failed: "单点登录认证失败，请重试。"
     new:
       demo_banner_message: 这是一个演示环境。为方便使用，登录凭据已预先填充。请勿输入真实或敏感信息。
       demo_banner_title: 演示模式已激活
@@ -20,5 +26,8 @@ zh-CN:
       password_placeholder: 请输入密码
       submit: 登录
       title: 登录您的账户
+      local_login_admin_only: 本地登录仅限管理员使用。
+      no_auth_methods_enabled: 当前未启用任何认证方式，请联系管理员。
     openid_connect:
+      account_linked: "账户已成功关联到 %{provider}"
       failed: 无法通过 OpenID Connect 认证。

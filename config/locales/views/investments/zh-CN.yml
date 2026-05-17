@@ -100,6 +100,73 @@ zh-CN:
       riester:
         short: Riester
         long: Riester 养老金（德国）
+      # 印度
+      nps:
+        short: NPS
+        long: 国家养老金系统
+      apy:
+        short: APY
+        long: Atal 养老金计划
+      indian_stocks:
+        short: 印度股票
+        long: 印度股票（Demat）
+      indian_equity:
+        short: 印度股权
+        long: 印度股权
+      indian_etf:
+        short: 印度 ETF
+        long: 印度 ETF
+      life_insurance:
+        short: 人寿保险
+        long: 人寿保险
+      ppf:
+        short: PPF
+        long: 公积金
+      ssy:
+        short: SSY
+        long: Sukanya Samriddhi 计划
+      nsc:
+        short: NSC
+        long: 国家储蓄证书
+      scss:
+        short: SCSS
+        long: 老年公民储蓄计划
+      fd:
+        short: FD
+        long: 定期存款
+      rd:
+        short: RD
+        long: 定期储蓄存款
+      pomis:
+        short: POMIS
+        long: 邮政每月收益计划
+      kvp:
+        short: KVP
+        long: Kisan Vikas Patra
+      gold_etf:
+        short: 黄金 ETF
+        long: 黄金 ETF
+      gold_mf:
+        short: 黄金共同基金
+        long: 黄金共同基金
+      sgb:
+        short: SGB
+        long: 主权黄金债券
+      g_sec:
+        short: G-Sec
+        long: 政府证券
+      sdl:
+        short: SDL
+        long: 邦政府开发贷款
+      corporate_bond:
+        short: 企业债券
+        long: 企业债券
+      infrastructure_bond:
+        short: 基础设施债券
+        long: 基础设施债券
+      tax_free_bond:
+        short: 免税债券
+        long: 免税债券
       # 通用
       pension:
         short: 养老金

@@ -1,6 +1,8 @@
 ---
 zh-CN:
   password_resets:
+    disabled: 通过 Sure 重置密码已禁用，请通过您的身份提供商重置密码。
+    sso_only_user: 您的账户使用 SSO 进行身份验证，请联系管理员管理您的凭据。
     edit:
       title: 重置密码
     new:

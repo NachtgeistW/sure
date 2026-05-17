@@ -1,0 +1,75 @@
+---
+zh-CN:
+  binance_items:
+    create:
+      default_name: Binance
+      success: 已成功连接 Binance！您的账户正在同步中。
+    update:
+      success: Binance 配置已成功更新。
+    destroy:
+      success: 已安排删除 Binance 连接。
+    setup_accounts:
+      title: 导入 Binance 账户
+      subtitle: 选择要跟踪的投资组合
+      instructions: 选择要导入的 Binance 投资组合，仅显示有余额的投资组合。
+      no_accounts: 所有账户已导入。
+      accounts_count:
+        one: "%{count} 个账户可用"
+        other: "%{count} 个账户可用"
+      select_all: 全选
+      import_selected: 导入所选
+      cancel: 取消
+      creating: 导入中...
+    complete_account_setup:
+      success:
+        one: "已导入 %{count} 个账户"
+        other: "已导入 %{count} 个账户"
+      none_selected: 未选择任何账户
+      no_accounts: 没有可导入的账户
+    binance_item:
+      provider_name: Binance
+      syncing: 同步中...
+      reconnect: 凭据需要更新
+      deletion_in_progress: 删除中...
+      sync_status:
+        no_accounts: 未找到账户
+        all_synced:
+          one: "%{count} 个账户已同步"
+          other: "%{count} 个账户已同步"
+        partial_sync: "%{linked_count} 个已同步，%{unlinked_count} 个需要设置"
+      status: "上次同步于 %{timestamp} 前"
+      status_with_summary: "上次同步于 %{timestamp} 前 - %{summary}"
+      status_never: 从未同步
+      update_credentials: 更新凭据
+      delete: 删除
+      no_accounts_title: 未找到账户
+      no_accounts_message: 同步后您的 Binance 投资组合将显示在这里。
+      setup_needed: 账户待导入
+      setup_description: 选择要跟踪的 Binance 投资组合。
+      setup_action: 导入账户
+      import_accounts_menu: 导入账户
+      stale_rate_warning: "余额为近似值 — %{date} 的精确汇率不可用，将在下次同步时更新。"
+    select_existing_account:
+      title: 关联 Binance 账户
+      no_accounts_found: 未找到 Binance 账户。
+      wait_for_sync: 等待 Binance 完成同步
+      check_provider_health: 检查您的 Binance API 凭据是否有效
+      currently_linked_to: "当前关联至：%{account_name}"
+      link: 关联
+      cancel: 取消
+    link_existing_account:
+      success: 已成功关联 Binance 账户
+      errors:
+        only_manual: 只有手动账户才能关联到 Binance
+        invalid_binance_account: 无效的 Binance 账户
+  binance_item:
+    syncer:
+      checking_credentials: 正在检查凭据...
+      credentials_invalid: API 凭据无效，请检查您的 API 密钥和密钥。
+      importing_accounts: 正在从 Binance 导入账户...
+      checking_configuration: 正在检查账户配置...
+      accounts_need_setup:
+        one: "%{count} 个账户需要设置"
+        other: "%{count} 个账户需要设置"
+      processing_accounts: 正在处理账户数据...
+      calculating_balances: 正在计算余额...

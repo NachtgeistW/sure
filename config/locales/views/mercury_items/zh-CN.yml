@@ -1,0 +1,181 @@
+---
+zh-CN:
+  mercury_items:
+    create:
+      success: Mercury 连接已成功创建
+    destroy:
+      success: Mercury 连接已移除
+    index:
+      title: Mercury 连接
+    loading:
+      loading_message: 正在加载 Mercury 账户...
+      loading_title: 加载中
+    link_accounts:
+      all_already_linked:
+        one: "所选账户（%{names}）已关联"
+        other: "所有 %{count} 个所选账户已关联：%{names}"
+      api_error: "API 错误：%{message}"
+      invalid_account_names:
+        one: "无法关联名称为空的账户"
+        other: "无法关联 %{count} 个名称为空的账户"
+      link_failed: 账户关联失败
+      no_accounts_selected: 请至少选择一个账户
+      no_api_token: 未找到 Mercury API 令牌，请在提供商设置中配置。
+      partial_invalid: "已成功关联 %{created_count} 个账户，%{already_linked_count} 个已关联，%{invalid_count} 个账户名称无效"
+      partial_success: "已成功关联 %{created_count} 个账户，%{already_linked_count} 个已关联：%{already_linked_names}"
+      select_connection: 关联账户前请先选择 Mercury 连接。
+      success:
+        one: "已成功关联 %{count} 个账户"
+        other: "已成功关联 %{count} 个账户"
+    mercury_item:
+      accounts_need_setup: 账户需要设置
+      delete: 删除连接
+      deletion_in_progress: 正在删除...
+      error: 错误
+      no_accounts_description: 此连接尚未关联任何账户。
+      no_accounts_title: 无账户
+      setup_action: 设置新账户
+      setup_description: "%{linked}/%{total} 个账户已关联，请为新导入的 Mercury 账户选择账户类型。"
+      setup_needed: 新账户待设置
+      status: "已同步 %{timestamp} 前"
+      status_never: 从未同步
+      status_with_summary: "上次同步于 %{timestamp} 前 - %{summary}"
+      syncing: 同步中...
+      total: 总计
+      unlinked: 未关联
+    provider_panel:
+      accounts_link: 账户
+      add_connection: 添加 Mercury 连接
+      base_url_label: 基础 URL（可选）
+      base_url_placeholder: https://api.mercury.com/api/v1（默认）
+      configured_html: "已配置并准备就绪。访问 %{accounts_link} 页签管理和设置账户。"
+      connection_name_label: 连接名称
+      connection_name_placeholder: 企业支票账户
+      default_connection_name: Mercury 连接
+      disconnect_confirm: "断开 %{name} 的连接？"
+      instructions:
+        copy_token_html: "复制<strong>完整令牌</strong>（包括 <code>secret-token:</code> 前缀）并在下方添加为命名连接"
+        create_token: 创建具有"只读"权限的新 API 令牌
+        open_tokens: 前往设置 > 开发者 > API 令牌
+        sign_in_html: "访问 %{link} 并登录要连接的账户"
+        whitelist_ip_html: "<strong>重要：</strong>将您服务器的 IP 地址添加到令牌白名单"
+      keep_token_placeholder: 留空则保留当前令牌
+      not_configured: 未配置
+      sandbox_note_html: "每个要同步的 Mercury 登录/API 令牌分别使用一个命名连接。沙箱测试请使用 <code>https://api-sandbox.mercury.com/api/v1</code> 作为基础 URL。Mercury 要求 IP 白名单 - 请确保在 Mercury 控制台中添加您的 IP。"
+      setup_accounts: 设置账户
+      setup_title: "设置说明："
+      sync: 同步
+      token_label: 令牌
+      token_placeholder: 在此粘贴令牌
+      update_connection: 更新连接
+    provider_connection:
+      default_description: 通过 Mercury 连接您的银行
+      default_name: Mercury
+      description: "通过 %{name} 连接"
+      name: "Mercury - %{name}"
+    select_accounts:
+      accounts_selected: 个账户已选择
+      api_error: "API 错误：%{message}"
+      cancel: 取消
+      configure_name_in_mercury: 无法导入 - 请在 Mercury 中配置账户名称
+      description: 选择要关联到您的 %{product_name} 账户的账户。
+      link_accounts: 关联所选账户
+      no_accounts_found: 未找到账户，请检查您的 API 令牌配置。
+      no_api_token: 未配置 Mercury API 令牌，请在设置中配置。
+      no_credentials_configured: 请先在提供商设置中配置您的 Mercury API 令牌。
+      no_name_placeholder: "（无名称）"
+      select_connection: 请在提供商设置中选择 Mercury 连接。
+      title: 选择 Mercury 账户
+    select_existing_account:
+      account_already_linked: 此账户已关联到提供商
+      all_accounts_already_linked: 所有 Mercury 账户已关联
+      api_error: "API 错误：%{message}"
+      cancel: 取消
+      configure_name_in_mercury: 无法导入 - 请在 Mercury 中配置账户名称
+      description: 选择要与此账户关联的 Mercury 账户，交易将自动同步和去重。
+      link_account: 关联账户
+      no_account_specified: 未指定账户
+      no_accounts_found: 未找到 Mercury 账户，请检查您的 API 令牌配置。
+      no_api_token: 未配置 Mercury API 令牌，请在设置中配置。
+      no_credentials_configured: 请先在提供商设置中配置您的 Mercury API 令牌。
+      no_name_placeholder: "（无名称）"
+      select_connection: 请在提供商设置中选择 Mercury 连接。
+      title: "将 %{account_name} 与 Mercury 关联"
+    link_existing_account:
+      account_already_linked: 此账户已关联到提供商
+      api_error: "API 错误：%{message}"
+      invalid_account_name: 无法关联名称为空的账户
+      mercury_account_already_linked: 此 Mercury 账户已关联到其他账户
+      mercury_account_not_found: 未找到 Mercury 账户
+      missing_parameters: 缺少必填参数
+      no_api_token: 未找到 Mercury API 令牌，请在提供商设置中配置。
+      select_connection: 关联账户前请先选择 Mercury 连接。
+      success: "已成功将 %{account_name} 与 Mercury 关联"
+    setup_accounts:
+      account_type_label: "账户类型："
+      all_accounts_linked: "您的所有 Mercury 账户已设置完成。"
+      api_error: "API 错误：%{message}"
+      fetch_failed: "获取账户失败"
+      no_accounts_to_setup: "没有需要设置的账户"
+      no_api_token: "未配置 Mercury API 令牌，请检查您的连接设置。"
+      account_types:
+        skip: 跳过此账户
+        depository: 支票或储蓄账户
+        credit_card: 信用卡
+        investment: 投资账户
+        loan: 贷款或抵押贷款
+        other_asset: 其他资产
+      subtype_labels:
+        depository: "账户子类型："
+        credit_card: ""
+        investment: "投资类型："
+        loan: "贷款类型："
+        other_asset: ""
+      subtype_messages:
+        credit_card: "信用卡将自动设置为信用卡账户。"
+        other_asset: "其他资产无需额外选项。"
+      subtypes:
+        depository:
+          checking: 支票账户
+          savings: 储蓄账户
+          hsa: 健康储蓄账户
+          cd: 定期存款
+          money_market: 货币市场
+        investment:
+          brokerage: 经纪账户
+          pension: 养老金
+          retirement: 退休账户
+          "401k": "401(k)"
+          roth_401k: "Roth 401(k)"
+          "403b": "403(b)"
+          tsp: 节俭储蓄计划
+          "529_plan": "529 计划"
+          hsa: 健康储蓄账户
+          mutual_fund: 共同基金
+          ira: 传统 IRA
+          roth_ira: Roth IRA
+          angel: 天使投资
+        loan:
+          mortgage: 抵押贷款
+          student: 学生贷款
+          auto: 汽车贷款
+          other: 其他贷款
+      balance: 余额
+      cancel: 取消
+      choose_account_type: "为每个 Mercury 账户选择正确的账户类型："
+      create_accounts: 创建账户
+      creating_accounts: 正在创建账户...
+      historical_data_range: "历史数据范围："
+      subtitle: 为导入的账户选择正确的账户类型
+      sync_start_date_help: 选择要同步多久以前的交易历史，最多可获取 3 年历史。
+      sync_start_date_label: "从以下日期开始同步交易："
+      title: 设置您的 Mercury 账户
+    complete_account_setup:
+      all_skipped: "所有账户均已跳过，未创建任何账户。"
+      creation_failed: "账户创建失败：%{error}"
+      no_accounts: "没有需要设置的账户。"
+      success: "已成功创建 %{count} 个账户。"
+    sync:
+      success: 同步已开始
+    update:
+      success: Mercury 连接已更新

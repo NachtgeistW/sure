@@ -1,8 +1,14 @@
 class Family < ApplicationRecord
   include Syncable, AutoTransferMatchable, Subscribeable, VectorSearchable
   include PlaidConnectable, SimplefinConnectable, LunchflowConnectable, EnableBankingConnectable
-  include CoinbaseConnectable, BinanceConnectable, CoinstatsConnectable, SnaptradeConnectable, MercuryConnectable, SophtronConnectable
-  include IndexaCapitalConnectable
+  include CoinbaseConnectable, BinanceConnectable, KrakenConnectable, CoinstatsConnectable, SnaptradeConnectable, MercuryConnectable, BrexConnectable, SophtronConnectable
+  include IndexaCapitalConnectable, IbkrConnectable
+
+  # Countries where red = profit (up) and green = loss (down)
+  RED_UP_COUNTRIES = %w[CN TW JP].freeze
+
+  # Countries where red = profit (up) and blue = loss (down)
+  BLUE_DOWN_COUNTRIES = %w[KR].freeze
 
   DATE_FORMATS = [
     [ "MM-DD-YYYY", "%m-%d-%Y" ],
@@ -28,6 +34,7 @@ class Family < ApplicationRecord
 
   has_many :imports, dependent: :destroy
   has_many :family_exports, dependent: :destroy
+  has_many :account_statements, dependent: :destroy
 
   has_many :entries, through: :accounts
   has_many :transactions, through: :accounts
@@ -253,6 +260,16 @@ class Family < ApplicationRecord
 
   def eu?
     country != "US" && country != "CA"
+  end
+
+  def color_convention
+    if BLUE_DOWN_COUNTRIES.include?(country)
+      "blue_down"
+    elsif RED_UP_COUNTRIES.include?(country)
+      "red_up"
+    else
+      "green_up"
+    end
   end
 
   def requires_securities_data_provider?
