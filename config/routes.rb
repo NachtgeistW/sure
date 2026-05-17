@@ -1,5 +1,7 @@
-require "sidekiq/web"
-require "sidekiq/cron/web"
+unless Rails.env.production?
+  require "sidekiq/web"
+  require "sidekiq/cron/web"
+end
 
 Rails.application.routes.draw do
   resources :indexa_capital_items, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
@@ -30,6 +32,22 @@ Rails.application.routes.draw do
       post :sync
       get :setup_accounts
       post :complete_account_setup
+    end
+  end
+
+  resources :brex_items, only: %i[index new create show edit update destroy] do
+    collection do
+      get :preload_accounts, to: "brex_items/account_flows#preload_accounts"
+      get :select_accounts, to: "brex_items/account_flows#select_accounts"
+      post :link_accounts, to: "brex_items/account_flows#link_accounts"
+      get :select_existing_account, to: "brex_items/account_flows#select_existing_account"
+      post :link_existing_account, to: "brex_items/account_flows#link_existing_account"
+    end
+
+    member do
+      post :sync
+      get :setup_accounts, to: "brex_items/account_setups#setup_accounts"
+      post :complete_account_setup, to: "brex_items/account_setups#complete_account_setup"
     end
   end
 
@@ -152,7 +170,7 @@ Rails.application.routes.draw do
     delete :disable
   end
 
-  mount Lookbook::Engine, at: "/design-system"
+  mount Lookbook::Engine, at: "/design-system" unless Rails.env.production?
 
   if Rails.env.development?
     mount Rswag::Api::Engine => "/api-docs"
@@ -160,7 +178,7 @@ Rails.application.routes.draw do
   end
 
   # Uses basic auth - see config/initializers/sidekiq.rb
-  mount Sidekiq::Web => "/sidekiq"
+  mount Sidekiq::Web => "/sidekiq" unless Rails.env.production?
 
   # AI chats
   resources :chats do
@@ -220,6 +238,7 @@ Rails.application.routes.draw do
     resource :profile, only: [ :show, :destroy ]
     resource :preferences, only: :show
     resource :appearance, only: %i[show update]
+    resource :debug, only: :show
     resource :hosting, only: %i[show update] do
       delete :clear_cache, on: :collection
       delete :disconnect_external_assistant, on: :collection
@@ -272,6 +291,7 @@ Rails.application.routes.draw do
     get :export_transactions, on: :collection
     get :google_sheets_instructions, on: :collection
     get :print, on: :collection
+    get :picker, on: :collection
   end
 
   resources :budgets, only: %i[index show edit update], param: :month_year do
@@ -416,6 +436,14 @@ Rails.application.routes.draw do
     end
 
     resource :sharing, only: [ :show, :update ], controller: "account_sharings"
+  end
+
+  resources :account_statements, only: %i[index show create update destroy] do
+    member do
+      patch :link
+      patch :unlink
+      patch :reject
+    end
   end
 
   # Convenience routes for polymorphic paths
