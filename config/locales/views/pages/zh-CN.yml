@@ -32,6 +32,27 @@ zh-CN:
         total_outflows: 总支出
         value: 金额
         weight: 占比
+      investment_summary:
+        title: 投资
+        total_return: 总回报
+        holding: 持仓
+        weight: 占比
+        value: 金额
+        return: 回报
+        period_activity: "%{period} 活动"
+        contributions: 投入
+        withdrawals: 提取
+        trades: 交易
+        no_investments: 无投资账户
+        add_investment: 添加投资账户以跟踪您的投资组合
       subtitle: 以下是您财务状况的概览
       toggle_section: 切换模块显示/隐藏
       welcome: 欢迎回来，%{name}
+    privacy:
+      title: 隐私政策
+      heading: 隐私政策
+      placeholder: 隐私政策内容将在此处显示。
+    terms:
+      title: 服务条款
+      heading: 服务条款
+      placeholder: 服务条款内容将在此处显示。

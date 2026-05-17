@@ -5,11 +5,6 @@ zh-CN:
       destroy:
         success: 删除成功
   accounts:
-    account:
-      link_lunchflow: 关联 Lunch Flow 账户
-      link_provider: 关联服务提供商
-      troubleshoot: 故障排查
-      unlink_provider: 解除提供商关联
     chart:
       data_not_available: 所选时间段内无可用数据
     confirm_unlink:
@@ -24,17 +19,43 @@ zh-CN:
       warning_transactions_kept: 所有现有交易和余额将被保留
     create:
       success: "%{type} 账户已创建"
+    set_default:
+      depository_only: 仅现金和信用卡账户可设为默认。
     destroy:
-      cannot_delete_linked: 无法删除已关联账户，请先解除关联。
       success: "%{type} 账户已计划删除"
+      cannot_delete_linked: 无法删除已关联账户，请先解除关联。
+      failed: 资源删除失败，请稍后重试。
     empty:
       empty_message: 可通过关联服务、导入数据或手动输入的方式添加账户。
       new_account: 新建账户
       no_accounts: 暂无账户
+    not_authorized: 您没有管理此账户的权限
+    account:
+      edit: 编辑
+      link_lunchflow: 关联 Lunch Flow 账户
+      link_provider: 关联服务提供商
+      unlink_provider: 解除提供商关联
+      change_simplefin_account: 更改 SimpleFIN 账户
+      troubleshoot: 故障排查
+      enable: 启用账户
+      disable: 禁用账户
+      set_default: 设为默认
+      remove_default: 取消默认
+      default_label: 默认
+      delete: 删除账户
+      sharing: 共享设置
     form:
-      balance: 当前余额
+      balance: "当日余额："
+      opening_balance_date_label: 开户余额日期
       name_label: 账户名称
       name_placeholder: 例如：储蓄账户
+      additional_details: 更多详情
+      institution_name_label: 机构名称
+      institution_name_placeholder: 例如：招商银行
+      institution_domain_label: 机构域名
+      institution_domain_placeholder: 例如：cmbchina.com
+      notes_label: 备注
+      notes_placeholder: 可记录账号、IBAN、路由号码等附加信息。
     index:
       accounts: 账户管理
       manual_accounts:
@@ -57,29 +78,38 @@ zh-CN:
       no_providers: 当前未配置任何服务提供商
       title: 选择关联的服务提供商
     show:
+      limited_fx_history_warning: “汇率历史数据仅从 %{date} 起可用。此日期前的交易使用近似汇率换算——这可能发生在汇率提供商仅提供有限历史窗口时。”
       activity:
         amount: 金额
         balance: 余额
+        confirmed: 已确认
         date: 日期
         entries: 条记录
         entry: 条记录
+        filter: 筛选
         new: 新建
+        new_activity: 新建活动
         new_balance: 新增余额
+        new_trade: 新建交易
         new_transaction: 新建交易
+        new_transfer: 新建转账
         no_entries: 未找到相关记录
+        pending: 待处理
         search:
           placeholder: 按名称搜索记录
+        status: 状态
         title: 账户活动
       chart:
         balance: 余额
         owed: 欠款金额
       menu:
-        confirm_accept: 删除“%{name}”
-        confirm_body_html: "<p>删除此账户将清除其历史价值数据，影响您整体账户的多个方面。此操作将直接影响您的资产净值计算和账户图表。</p><br
-          /><p>删除后无法恢复账户信息，您需要将其作为新账户重新添加。</p>"
+        confirm_accept: 删除”%{name}”
+        confirm_body_html: “<p>删除此账户将清除其历史价值数据，影响您整体账户的多个方面。此操作将直接影响您的资产净值计算和账户图表。</p><br /><p>删除后无法恢复账户信息，您需要将其作为新账户重新添加。</p>”
         confirm_title: 确认删除账户？
         edit: 编辑
-        import: 导入交易记录
+        import: 导入记录
+        import_trades: 导入交易
+        import_transactions: 导入交易记录
         manage: 管理账户
     sidebar:
       configure_providers: 在此配置您的服务提供商。
@@ -95,6 +125,24 @@ zh-CN:
         debts: 负债
     sync_all:
       syncing: 账户同步中...
+    tax_treatments:
+      taxable: 应税
+      tax_deferred: 递延纳税
+      tax_exempt: 免税
+      tax_advantaged: 税收优惠
+    tax_treatment_descriptions:
+      taxable: 收益在实现时征税
+      tax_deferred: 供款可抵税，取款时征税
+      tax_exempt: 税后供款，收益不征税
+      tax_advantaged: 附带条件的特殊税收优惠
+    subtype_regions:
+      us: 美国
+      uk: 英国
+      ca: 加拿大
+      au: 澳大利亚
+      eu: 欧洲
+      in: 印度
+      generic: 通用
     types:
       credit_card: 信用卡账户
       crypto: 加密货币账户

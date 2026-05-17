@@ -16,6 +16,7 @@ zh-CN:
       exchange_rate_help: 选择如何输入金额。
     syncing_notice:
       syncing: 账户数据同步中...
+    require_admin: "只有管理员才能执行此操作"
     transaction_tabs:
       expense: 支出
       income: 收入

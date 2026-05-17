@@ -16,8 +16,13 @@ zh-CN:
       first_name_placeholder: 名
       last_name: 姓
       last_name_placeholder: 姓
+      group_name: 组织名称
+      group_name_placeholder: 组织名称
       household_name: 家庭名称
       household_name_placeholder: 家庭名称
+      moniker_prompt: "将与以下成员一起使用 %{product_name}……"
+      moniker_family: 家庭成员（仅您自己，或与伴侣、子女等）
+      moniker_group: 一群人（公司、俱乐部、协会或其他类型）
       country: 国家
       submit: 继续
     preferences:

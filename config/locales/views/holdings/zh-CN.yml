@@ -19,17 +19,93 @@ zh-CN:
     missing_price_tooltip:
       description: 此投资缺少价格数据，无法计算其收益或价值。
       missing_data: 数据缺失
+    update:
+      success: 成本基础已保存。
+      error: 成本基础值无效。
+    unlock_cost_basis:
+      success: 成本基础已解锁，下次同步时将可被更新。
+    remap_security:
+      success: 证券更新成功。
+      security_not_found: 未找到所选证券。
+    reset_security:
+      success: 证券已重置为提供商数据。
+    sync_prices:
+      success: 市场数据同步成功。
+      unavailable: 离线证券不支持市场数据同步。
+      provider_error: 无法获取最新价格，请几分钟后重试。
+    errors:
+      security_collision: "无法重新映射：您在 %{date} 已有 %{ticker} 的持仓记录。"
+    cost_basis_sources:
+      manual: 用户设置
+      calculated: 由交易计算
+      provider: 来自提供商
+    cost_basis_cell:
+      unknown: "--"
+      set_cost_basis_header: "设置 %{ticker} 的成本基础（%{qty} 股）"
+      total_cost_basis_label: 总成本基础
+      or_per_share_label: "或按每股输入："
+      per_share: 每股
+      cancel: 取消
+      save: 保存
+      overwrite_confirm_title: 覆盖成本基础？
+      overwrite_confirm_body: "这将替换当前成本基础 %{current}。"
+    holding:
+      per_share: 每股
+      shares: "%{qty}股"
+      unknown: "--"
+      no_cost_basis: 无成本基础
+    index:
+      average_cost: 平均成本
+      holdings: 持仓
+      name: 名称
+      new_holding: 新建交易
+      no_holdings: 暂无持仓记录
+      return: 总收益
+      weight: 权重
     show:
       avg_cost_label: 平均成本
+      book_value_label: 账面价值
+      cancel: 取消
+      cost_basis_locked_description: 您手动设置的成本基础不会被同步更改。
+      cost_basis_locked_label: 成本基础已锁定
       current_market_price_label: 当前市价
       delete: 删除
       delete_subtitle: 此操作将删除该持仓及相关所有交易记录，且不可恢复。
       delete_title: 删除持仓
+      edit_security: 编辑证券
       history: 历史记录
+      last_price_update: 最后价格更新
+      market_data_label: 市场数据
+      market_data_sync_button: 刷新
+      market_value_label: 市场价值
+      never: 从未
+      no_cost_basis: 无成本基础
+      no_security_provider: 未配置证券提供商，无法搜索证券。
+      no_trade_history: 此持仓暂无交易历史。
+      originally: "原为 %{ticker}"
       overview: 概览
       portfolio_weight_label: 投资组合权重
+      provider_disabled_warning: "价格更新已暂停——%{provider} 提供商已禁用。请在下方切换至其他提供商，或在设置中重新启用。"
+      provider_sent: "提供商数据：%{ticker}"
+      remap_security: 保存
+      reset_confirm_body: "这将把证券从 %{current} 改回 %{original} 并迁移所有关联交易。"
+      reset_confirm_title: 重置证券为提供商数据？
+      reset_to_provider: 重置为提供商数据
+      search_security: 搜索证券
+      search_security_placeholder: 按代码或名称搜索
+      security_label: 证券
+      security_remapped_label: 证券已重新映射
       settings: 设置
+      shares_label: 股数
+      switch_provider_button: 切换
+      switch_provider_description: "%{provider} 已禁用，请从其他已启用的提供商中搜索此证券。"
+      switch_provider_label: 切换提供商
+      syncing: 同步中...
       ticker_label: 股票代码
       total_return_label: 总收益
       trade_history_entry: "%{qty}股%{security} @ %{price}"
+      truncated_history_warning: "价格历史仅从 %{date} 起可用。更早日期在所选提供商处无数据——可能是因为该资产在您的交易日期之后才上市，或提供商在当前套餐下仅提供有限历史数据。"
+      unlock_confirm_body: 这将允许成本基础在提供商同步或交易计算时被更新。
+      unlock_confirm_title: 解锁成本基础？
+      unlock_cost_basis: 解锁
       unknown: 未知
