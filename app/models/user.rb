@@ -381,7 +381,8 @@ class User < ApplicationRecord
     else
       "green_up"
     end
-    
+  end
+
   def preview_features_enabled?
     preferences&.dig("preview_features_enabled") == true
   end
