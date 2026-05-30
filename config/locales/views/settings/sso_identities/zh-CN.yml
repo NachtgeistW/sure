@@ -3,5 +3,5 @@ zh-CN:
   settings:
     sso_identities:
       destroy:
-        cannot_unlink_last: 无法解除最后一个身份绑定
-        success: 操作成功
+        cannot_unlink_last: 不能取消关联最后一个身份
+        success: 身份已成功取消关联

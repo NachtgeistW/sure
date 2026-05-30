@@ -135,6 +135,7 @@ en:
         month_start_day: Budget month starts on
         month_start_day_hint: Set when your budget month starts (e.g., payday)
         month_start_day_warning: Your budgets and MTD calculations will use this custom start day instead of the 1st of each month.
+        translations_notice: Please note, we are still working on translations for various languages.
         currencies_title: "%{moniker} Currencies"
         currencies_subtitle: Choose which currencies appear in money fields for your %{moniker}
         base_currency_label: Base currency
@@ -157,9 +158,13 @@ en:
         sharing_default_label: Default sharing for new accounts
         sharing_shared: Share with all members
         sharing_private: Keep private by default
+        preview:
+          title: Enable preview features
+          description: Opt in to in-progress features tagged preview or canary.
     profiles:
       destroy:
         cannot_remove_self: You cannot remove yourself from the account.
+        member_owns_other_family_data: This member still owns accounts in another household and cannot be removed. Transfer or remove those accounts first.
         member_removal_failed: There was a problem removing the member.
         member_removed: Member was successfully removed.
         not_authorized: You are not authorized to remove members.
@@ -342,6 +347,8 @@ en:
       encryption_error:
         title: Encryption keys missing
         message: "Bank sync needs Active Record encryption configured. Set primary_key, deterministic_key and key_derivation_salt in your Rails credentials or environment variables."
+      provider_form:
+        save_and_connect: "Save and connect"
       coinbase_panel:
         setup_instructions: "To connect Coinbase:"
         step1_html: Go to <a href="https://portal.cdp.coinbase.com/projects/api-keys" target="_blank" rel="noopener noreferrer" class="text-primary underline">Coinbase API Settings</a>
@@ -372,6 +379,9 @@ en:
         connect_button: Connect Binance
         syncing: Syncing...
         sync: Sync
+        historical_import: "Historical Import Settings"
+        sync_start_date_label: "Import data from"
+        sync_start_date_help: "Select how far back to fetch historical trades."
         disconnect_confirm: "Are you sure you want to disconnect Binance?"
       kraken_panel:
         step1_html: 'Go to <a href="https://pro.kraken.com/app/settings/api" target="_blank" rel="noopener noreferrer" class="underline">Kraken API settings</a>'

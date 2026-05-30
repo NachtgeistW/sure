@@ -2,18 +2,17 @@
 zh-CN:
   investments:
     edit:
-      edit: 编辑%{account}
+      edit: 编辑 %{account}
     form:
       none: 无
       subtype_prompt: 选择投资类型
     new:
-      title: 请输入账户余额
+      title: 输入账户余额
     show:
       chart_title: 总价值
     subtypes:
-      # 美国
       brokerage:
-        short: 券商账户
+        short: 券商
         long: 券商账户
       401k:
         short: 401(k)
@@ -29,19 +28,19 @@ zh-CN:
         long: 457(b)
       tsp:
         short: TSP
-        long: 联邦节俭储蓄计划
+        long: 节俭储蓄计划
       ira:
         short: IRA
-        long: 传统个人退休账户
+        long: 传统 IRA
       roth_ira:
         short: Roth IRA
-        long: Roth 个人退休账户
+        long: Roth IRA
       sep_ira:
         short: SEP IRA
-        long: SEP 个人退休账户
+        long: SEP IRA
       simple_ira:
         short: SIMPLE IRA
-        long: SIMPLE 个人退休账户
+        long: SIMPLE IRA
       529_plan:
         short: 529 计划
         long: 529 教育储蓄计划
@@ -54,7 +53,6 @@ zh-CN:
       utma:
         short: UTMA
         long: UTMA 托管账户
-      # 英国
       isa:
         short: ISA
         long: 个人储蓄账户
@@ -63,11 +61,10 @@ zh-CN:
         long: 终身 ISA
       sipp:
         short: SIPP
-        long: 自投资个人养老金
+        long: 自主投资个人养老金
       workplace_pension_uk:
-        short: 职场养老金
-        long: 职场养老金
-      # 加拿大
+        short: 养老金
+        long: 工作场所养老金
       rrsp:
         short: RRSP
         long: 注册退休储蓄计划
@@ -83,24 +80,21 @@ zh-CN:
       rrif:
         short: RRIF
         long: 注册退休收入基金
-      # 澳大利亚
       super:
-        short: 超级年金
-        long: 超级年金
+        short: Super
+        long: 养老金储蓄
       smsf:
         short: SMSF
-        long: 自管超级基金
-      # 欧洲
+        long: 自主管理超级年金基金
       pea:
         short: PEA
-        long: 股票储蓄计划（法国）
+        long: 股票储蓄计划
       pillar_3a:
         short: 第三支柱 3a
-        long: 个人养老金（第三支柱 3a）
+        long: 私人养老金（第三支柱 3a）
       riester:
         short: Riester
-        long: Riester 养老金（德国）
-      # 印度
+        long: Riester 养老金
       nps:
         short: NPS
         long: 国家养老金系统
@@ -111,8 +105,8 @@ zh-CN:
         short: 印度股票
         long: 印度股票（Demat）
       indian_equity:
-        short: 印度股权
-        long: 印度股权
+        short: 印度权益
+        long: 印度权益
       indian_etf:
         short: 印度 ETF
         long: 印度 ETF
@@ -121,7 +115,7 @@ zh-CN:
         long: 人寿保险
       ppf:
         short: PPF
-        long: 公积金
+        long: 公共公积金
       ssy:
         short: SSY
         long: Sukanya Samriddhi 计划
@@ -130,16 +124,16 @@ zh-CN:
         long: 国家储蓄证书
       scss:
         short: SCSS
-        long: 老年公民储蓄计划
+        long: 老年人储蓄计划
       fd:
-        short: FD
+        short: 定存
         long: 定期存款
       rd:
         short: RD
         long: 定期储蓄存款
       pomis:
         short: POMIS
-        long: 邮政每月收益计划
+        long: 邮政月收益计划
       kvp:
         short: KVP
         long: Kisan Vikas Patra
@@ -147,36 +141,38 @@ zh-CN:
         short: 黄金 ETF
         long: 黄金 ETF
       gold_mf:
-        short: 黄金共同基金
+        short: 黄金基金
         long: 黄金共同基金
       sgb:
         short: SGB
         long: 主权黄金债券
       g_sec:
-        short: G-Sec
-        long: 政府证券
+        short: 国债
+        long: 政府证券（G-Secs）
       sdl:
         short: SDL
-        long: 邦政府开发贷款
+        long: 州发展贷款（SDLs）
       corporate_bond:
-        short: 企业债券
-        long: 企业债券
+        short: 公司债
+        long: 公司债
       infrastructure_bond:
-        short: 基础设施债券
+        short: 基建债
         long: 基础设施债券
       tax_free_bond:
-        short: 免税债券
+        short: 免税债
         long: 免税债券
-      # 通用
       pension:
         short: 养老金
         long: 养老金
       retirement:
-        short: 退休账户
+        short: 退休
         long: 退休账户
       mutual_fund:
         short: 共同基金
         long: 共同基金
+      gold:
+        short: 黄金
+        long: 黄金（实物或数字）
       angel:
         short: 天使投资
         long: 天使投资
@@ -190,4 +186,4 @@ zh-CN:
       cash: 现金
       holdings: 持仓
       total: 投资组合余额
-      total_value_tooltip: 总投资组合余额等于经纪账户现金（可用于交易）与持仓当前市值的总和。
+      total_value_tooltip: 投资组合总余额是券商现金（可用于交易）与当前持仓市值之和。
