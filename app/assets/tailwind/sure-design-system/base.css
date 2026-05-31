@@ -1,24 +1,50 @@
-/* Flipped profit/loss color convention — used in CN, HK, TW, JP, VN, etc.
-   Swaps --color-success and --color-destructive so red = profit (up), green = loss (down). */
+/* Profit/loss directional colors.
+
+   --color-gain / --color-loss express the DIRECTION of a monetary value
+   (gain vs. loss, inflow vs. outflow), which is region-dependent: most
+   Western markets use green = gain / red = loss, while CN/HK/TW/JP/VN use
+   red = gain / green = loss, and KR uses red = gain / blue = loss.
+
+   These are deliberately separate from the semantic --color-success /
+   --color-destructive tokens, which always keep their fixed meaning
+   (success = good = green, destructive = danger = red) regardless of region.
+   Only use gain/loss for figures whose color encodes financial direction
+   (trends, cash flow, transaction amounts); use success/destructive for
+   everything else (buttons, alerts, log out, etc.). */
+:root {
+  --color-gain: var(--color-success);
+  --color-loss: var(--color-destructive);
+}
+
+/* Flipped convention — used in CN, HK, TW, JP, VN, etc.: red = gain, green = loss. */
 [data-color-convention="red_up"] {
-  --color-success: var(--color-red-600);
-  --color-destructive: var(--color-green-600);
+  --color-gain: var(--color-red-600);
+  --color-loss: var(--color-green-600);
 }
 
 [data-color-convention="red_up"][data-theme="dark"] {
-  --color-success: var(--color-red-400);
-  --color-destructive: var(--color-green-500);
+  --color-gain: var(--color-red-400);
+  --color-loss: var(--color-green-500);
 }
 
-/* Korean convention: red = profit (up), blue = loss (down) */
+/* Korean convention: red = gain, blue = loss. */
 [data-color-convention="blue_down"] {
-  --color-success: var(--color-red-600);
-  --color-destructive: var(--color-blue-600);
+  --color-gain: var(--color-red-600);
+  --color-loss: var(--color-blue-600);
 }
 
 [data-color-convention="blue_down"][data-theme="dark"] {
-  --color-success: var(--color-red-400);
-  --color-destructive: var(--color-blue-400);
+  --color-gain: var(--color-red-400);
+  --color-loss: var(--color-blue-400);
+}
+
+/* Tailwind text utilities for the directional tokens. Defined by hand (not via
+   @theme) so the resolved color stays a live var() that flips per region. */
+@utility text-gain {
+  color: var(--color-gain);
+}
+@utility text-loss {
+  color: var(--color-loss);
 }
 
 @layer base {
