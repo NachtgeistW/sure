@@ -1,4 +1,9 @@
 class Assistant::Responder
+  # Maximum number of follow-up function call rounds to prevent runaway LLM
+  # spend. Some providers (e.g. DeepSeek) request tools across multiple turns
+  # instead of batching them in a single response like OpenAI does.
+  MAX_FOLLOW_UP_ROUNDS = 3
+
   def initialize(message:, instructions:, function_tool_caller:, llm:)
     @message = message
     @instructions = instructions
@@ -46,14 +51,22 @@ class Assistant::Responder
   private
     attr_reader :message, :instructions, :function_tool_caller, :llm
 
-    def handle_follow_up_response(response)
+    def handle_follow_up_response(response, depth: 1)
+      follow_up_handled = false
+
       streamer = proc do |chunk|
         case chunk.type
         when "output_text"
           emit(:output_text, chunk.data)
         when "response"
-          # We do not currently support function executions for a follow-up response (avoid recursive LLM calls that could lead to high spend)
-          emit(:response, { id: chunk.data.id })
+          follow_up = chunk.data
+          follow_up_handled = true
+
+          if follow_up.function_requests.any? && depth < MAX_FOLLOW_UP_ROUNDS
+            handle_follow_up_response(follow_up, depth: depth + 1)
+          else
+            emit(:response, { id: follow_up.id })
+          end
         end
       end
 
@@ -65,11 +78,21 @@ class Assistant::Responder
       })
 
       # Get follow-up response with tool call results
-      get_llm_response(
+      follow_up_response = get_llm_response(
         streamer: streamer,
         function_results: function_tool_calls.map(&:to_result),
         previous_response_id: response.id
       )
+
+      # For synchronous (non-streaming) responses, handle recursive function
+      # requests when the streamer did not already process them.
+      unless follow_up_handled
+        if follow_up_response && follow_up_response.function_requests.any? && depth < MAX_FOLLOW_UP_ROUNDS
+          handle_follow_up_response(follow_up_response, depth: depth + 1)
+        elsif follow_up_response
+          emit(:response, { id: follow_up_response.id })
+        end
+      end
     end
 
     def get_llm_response(streamer:, function_results: [], previous_response_id: nil)

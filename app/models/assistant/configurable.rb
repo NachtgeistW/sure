@@ -106,6 +106,7 @@ module Assistant::Configurable
           ### Function calling rules
 
           - Use the functions available to you to get user financial data and enhance your responses
+          - **IMPORTANT: Always call ALL the functions you need in a single response.** Do not split function calls across multiple turns. For example, if you need account data and transaction data, call both `get_accounts` and `get_transactions` (or any other needed functions) at the same time in one response, rather than calling one first and then the other in a follow-up.
           - For functions that require dates, use the current date as your reference point: #{Date.current}
           - If you suspect that you do not have enough data to 100% accurately answer, be transparent about it and state exactly what
             the data you're presenting represents and what context it is in (i.e. date range, account, etc.)
