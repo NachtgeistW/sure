@@ -52,21 +52,14 @@ class Assistant::Responder
     attr_reader :message, :instructions, :function_tool_caller, :llm
 
     def handle_follow_up_response(response, depth: 1)
-      follow_up_handled = false
-
       streamer = proc do |chunk|
         case chunk.type
         when "output_text"
           emit(:output_text, chunk.data)
         when "response"
-          follow_up = chunk.data
-          follow_up_handled = true
-
-          if follow_up.function_requests.any? && depth < MAX_FOLLOW_UP_ROUNDS
-            handle_follow_up_response(follow_up, depth: depth + 1)
-          else
-            emit(:response, { id: follow_up.id })
-          end
+          # Streamer only emits the final response; recursive function handling
+          # is done in the synchronous path below after get_llm_response returns.
+          emit(:response, { id: chunk.data.id })
         end
       end
 
@@ -84,14 +77,12 @@ class Assistant::Responder
         previous_response_id: response.id
       )
 
-      # For synchronous (non-streaming) responses, handle recursive function
-      # requests when the streamer did not already process them.
-      unless follow_up_handled
-        if follow_up_response && follow_up_response.function_requests.any? && depth < MAX_FOLLOW_UP_ROUNDS
-          handle_follow_up_response(follow_up_response, depth: depth + 1)
-        elsif follow_up_response
-          emit(:response, { id: follow_up_response.id })
-        end
+      # If the follow-up response contains more function requests and we
+      # haven't exceeded the recursion limit, continue the tool-call loop.
+      # This supports providers like DeepSeek that request tools across
+      # multiple turns instead of batching them in a single response.
+      if follow_up_response && follow_up_response.function_requests.any? && depth < MAX_FOLLOW_UP_ROUNDS
+        handle_follow_up_response(follow_up_response, depth: depth + 1)
       end
     end
 
