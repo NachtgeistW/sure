@@ -161,7 +161,7 @@ class PagesController < ApplicationController
       total_expense = net_totals.total_net_expense.to_f.round(2)
 
       # Central Cash Flow node
-      cash_flow_idx = add_node.call("cash_flow_node", "Cash Flow", total_income, 100.0, "var(--color-success)")
+      cash_flow_idx = add_node.call("cash_flow_node", "Cash Flow", total_income, 100.0, "var(--color-gain)")
 
       # Build netted subcategory data from raw totals
       net_subcategories_by_parent = build_net_subcategories(expense_totals, income_totals)
@@ -194,8 +194,8 @@ class PagesController < ApplicationController
       net = (total_income - total_expense).round(2)
       if net.positive?
         percentage = total_income.zero? ? 0 : (net / total_income * 100).round(1)
-        idx = add_node.call("surplus_node", "Surplus", net, percentage, "var(--color-success)")
-        links << { source: cash_flow_idx, target: idx, value: net, color: "var(--color-success)", percentage: percentage }
+        idx = add_node.call("surplus_node", "Surplus", net, percentage, "var(--color-gain)")
+        links << { source: cash_flow_idx, target: idx, value: net, color: "var(--color-gain)", percentage: percentage }
       end
 
       { nodes: nodes, links: links, currency_symbol: Money::Currency.new(currency).symbol }

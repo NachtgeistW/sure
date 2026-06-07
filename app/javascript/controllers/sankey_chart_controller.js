@@ -25,6 +25,8 @@ export default class extends Controller {
   static ZOOM_TRANSITION_MS = 220;
   static DEFAULT_COLOR = "var(--color-gray-400)";
   static CSS_VAR_MAP = {
+    "var(--color-gain)": "#10A861",
+    "var(--color-loss)": "#EC2222",
     "var(--color-success)": "#10A861",
     "var(--color-destructive)": "#EC2222",
     "var(--color-gray-400)": "#9E9E9E",
