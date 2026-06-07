@@ -154,27 +154,28 @@ class AssistantTest < ActiveSupport::TestCase
 
     call2_response = provider_success_response(call2_response_chunk.data)
 
-    sequence = sequence("provider_chat_response")
-
-    @provider.expects(:chat_response).with do |message, **options|
+    # The responder makes exactly two provider calls for one tool round:
+    #   1. The initial call, which returns a function request (no function_results yet).
+    #   2. The follow-up call, which carries the tool results and streams the text answer.
+    # Each invocation is routed by inspecting `function_results` rather than a mocha
+    # sequence. Consecutive `.returns` hands back call1's response first, then call2's,
+    # matching the real invocation order.
+    @provider.expects(:chat_response).twice.with do |message, **options|
       assert_equal @expected_session_id, options[:session_id]
       assert_equal @expected_user_identifier, options[:user_identifier]
       assert_equal @expected_conversation_history, options[:messages]
-      call2_text_chunks.each do |text_chunk|
-        options[:streamer].call(text_chunk)
+
+      streamer = options[:streamer]
+      if options[:function_results].blank?
+        # Initial call: emit the function request.
+        streamer.call(call1_response_chunk)
+      else
+        # Follow-up call: emit the streamed text answer.
+        call2_text_chunks.each { |text_chunk| streamer.call(text_chunk) }
+        streamer.call(call2_response_chunk)
       end
-
-      options[:streamer].call(call2_response_chunk)
       true
-    end.returns(call2_response).once.in_sequence(sequence)
-
-    @provider.expects(:chat_response).with do |message, **options|
-      assert_equal @expected_session_id, options[:session_id]
-      assert_equal @expected_user_identifier, options[:user_identifier]
-      assert_equal @expected_conversation_history, options[:messages]
-      options[:streamer].call(call1_response_chunk)
-      true
-    end.returns(call1_response).once.in_sequence(sequence)
+    end.returns(call1_response, call2_response)
 
     assert_difference "AssistantMessage.count", 1 do
       @assistant.respond_to(@message)
