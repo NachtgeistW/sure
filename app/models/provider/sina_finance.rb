@@ -40,6 +40,10 @@ class Provider::SinaFinance < Provider
     "23" => "mutual fund"
   }.freeze
 
+  # Exchange-traded fund types — listed on an exchange even when Sina's
+  # suggest endpoint returns them with the open-fund "of" symbol prefix
+  ETF_TYPES = %w[22 23].freeze
+
   def initialize
     # Sina Finance public endpoints require no API key
     @cache_prefix = "sina_finance"
@@ -96,8 +100,18 @@ class Provider::SinaFinance < Provider
           prefixed_symbol = fields[3].to_s.downcase
           name = fields[4].presence || code
 
+          next unless SUGGEST_TYPE_KINDS.key?(type)
+
           mic = MARKET_PREFIX_TO_MIC[prefixed_symbol[0, 2]]
-          next unless mic.present? && SUGGEST_TYPE_KINDS.key?(type)
+
+          # ETFs/LOFs often come back with the open-fund "of" prefix
+          # (e.g. of159509) even though they trade on an exchange — infer
+          # the market from the fund code instead.
+          if mic.nil? && ETF_TYPES.include?(type) && code.match?(/\A\d{6}\z/)
+            mic = MARKET_PREFIX_TO_MIC[infer_market_prefix(code.downcase)]
+          end
+
+          next unless mic.present?
           next if exchange_operating_mic.present? && mic != exchange_operating_mic
 
           Security.new(

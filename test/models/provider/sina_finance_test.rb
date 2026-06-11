@@ -69,6 +69,35 @@ class Provider::SinaFinanceTest < ActiveSupport::TestCase
     assert_equal [ "600000" ], response.data.map(&:symbol)
   end
 
+  test "search_securities infers exchange for of-prefixed ETFs" do
+    # Sina returns exchange-traded funds with the open-fund "of" prefix,
+    # e.g. 纳指科技ETF (159509) comes back as of159509 — the market must be
+    # inferred from the fund code (15x → Shenzhen)
+    payload = 'var suggestvalue="of159509,22,159509,of159509,纳指科技ETF景顺,,纳指科技ETF景顺,99,1,,,";'
+    mock_client_returning(payload.encode(Encoding::GBK).force_encoding(Encoding::ASCII_8BIT))
+
+    response = @provider.search_securities("159509")
+
+    assert response.success?
+    assert_equal 1, response.data.size
+    etf = response.data.first
+    assert_equal "159509", etf.symbol
+    assert_equal "XSHE", etf.exchange_operating_mic
+    assert_equal "纳指科技ETF景顺", etf.name
+  end
+
+  test "search_securities still skips of-prefixed non-ETF fund types" do
+    # Type 25 (QDII open fund) is OTC-only — no exchange klines exist, so it
+    # must not surface even though the code looks exchange-like
+    payload = 'var suggestvalue="of110011,25,110011,of110011,易方达中小盘混合,,易方达中小盘混合,99,1,,,";'
+    mock_client_returning(payload.encode(Encoding::GBK).force_encoding(Encoding::ASCII_8BIT))
+
+    response = @provider.search_securities("110011")
+
+    assert response.success?
+    assert_empty response.data
+  end
+
   test "search_securities returns empty array for no matches" do
     mock_client_returning('var suggestvalue="";')
 
