@@ -64,6 +64,7 @@ zh-CN:
         requires_api_key_alpha_vantage: 需要 API 密钥，每日限制 25 次调用
         mfapi_hint: 免费，无需 API 密钥——仅支持印度共同基金
         binance_public_hint: 免费，无需 API 密钥——仅支持加密货币（BTC、ETH 等）
+        sina_finance_hint: 免费，无需 API 密钥——仅支持中国 A 股和场内基金
         providers:
           twelve_data: Twelve Data
           yahoo_finance: Yahoo Finance
@@ -72,6 +73,7 @@ zh-CN:
           alpha_vantage: Alpha Vantage
           mfapi: MFAPI.in
           binance_public: Binance
+          sina_finance: 新浪财经
         securities_provider_label: 证券（股票价格）数据提供商
         title: 数据提供商选择
       assistant_settings:

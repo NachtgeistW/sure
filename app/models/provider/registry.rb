@@ -140,6 +140,10 @@ class Provider::Registry
       def binance_public
         Provider::BinancePublic.new
       end
+
+      def sina_finance
+        Provider::SinaFinance.new
+      end
   end
 
   def initialize(concept)
@@ -172,7 +176,7 @@ class Provider::Registry
       when :exchange_rates
         %i[twelve_data yahoo_finance]
       when :securities
-        %i[twelve_data yahoo_finance tiingo eodhd alpha_vantage mfapi binance_public]
+        %i[twelve_data yahoo_finance tiingo eodhd alpha_vantage mfapi binance_public sina_finance]
       when :llm
         %i[openai anthropic]
       else

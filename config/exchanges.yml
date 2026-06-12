@@ -239,6 +239,9 @@ XSHG:
 XSHE:
   name: Shenzhen
   country: CN
+BJSE:
+  name: Beijing
+  country: CN
 XHKG:
   name: Hong Kong
   country: HK
