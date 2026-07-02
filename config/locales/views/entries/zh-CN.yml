@@ -13,11 +13,11 @@ zh-CN:
     update:
       success: 记录已更新
     unlock:
-      success: 记录已解除保护，下次同步时将可被更新。
+      success: 记录解除锁定成功
     protection:
-      tooltip: 已保护，不受同步覆盖
-      title: 已保护，不受同步覆盖
-      description: 您对此记录的修改不会被服务提供商同步覆盖。
-      locked_fields_label: "已锁定字段："
+      tooltip: 受同步保护
+      title: 受同步保护
+      description: 你对此记录的编辑不会被提供商同步覆盖。
+      locked_fields_label: 锁定字段：
       unlock_button: 允许同步更新
-      unlock_confirm: 允许同步更新此记录？您的修改可能在下次同步时被覆盖。
+      unlock_confirm: 允许同步更新此记录？下次同步时你的更改可能会被覆盖。

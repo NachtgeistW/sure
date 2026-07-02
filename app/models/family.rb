@@ -3,6 +3,7 @@ class Family < ApplicationRecord
   include PlaidConnectable, SimplefinConnectable, LunchflowConnectable, AkahuConnectable, EnableBankingConnectable
   include CoinbaseConnectable, BinanceConnectable, KrakenConnectable, CoinstatsConnectable, SnaptradeConnectable, MercuryConnectable, BrexConnectable, SophtronConnectable
   include IndexaCapitalConnectable, IbkrConnectable
+  include UpConnectable
 
   # Countries where red = profit (up) and green = loss (down)
   RED_UP_COUNTRIES = %w[CN TW JP].freeze
@@ -20,7 +21,9 @@ class Family < ApplicationRecord
     [ "MM/DD/YYYY", "%m/%d/%Y" ],
     [ "D/MM/YYYY", "%e/%m/%Y" ],
     [ "YYYY.MM.DD", "%Y.%m.%d" ],
-    [ "YYYYMMDD", "%Y%m%d" ]
+    [ "YYYYMMDD", "%Y%m%d" ],
+    # QIF month-name imports rely on QifParser preserving normalized spaces.
+    [ "DD MMM YYYY", "%d %b %Y" ]
   ].freeze
 
 

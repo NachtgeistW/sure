@@ -7,8 +7,13 @@ zh-CN:
         label: Client ID
         placeholder: 在此输入您的 Client ID
         title: Brand Fetch 设置
-        high_res_label: 启用高分辨率标志
-        high_res_description: 启用后，标志将以 120x120 分辨率获取，而非 40x40。这将在高 DPI 显示器上提供更清晰的图像。
+        env_configured_message: 已通过环境变量配置 Brandfetch。
+        show_details: "（显示详情）"
+        setup_step_1_html: 前往 Brandfetch 并创建 API Key。
+        setup_step_2_html: 复制 API Key。
+        setup_step_3: 将 API Key 粘贴到下方。
+        high_res_label: 高清 Logo
+        high_res_description: 启用后优先获取更高分辨率的品牌资源。
       clear_cache:
         cache_cleared: 数据缓存已清除，此操作可能需要一些时间完成。
       invite_code_settings:
@@ -33,38 +38,15 @@ zh-CN:
         access_token_placeholder: 在此输入您的访问令牌
         uri_base_label: API 基础 URL（可选）
         uri_base_placeholder: https://api.openai.com/v1（默认）
-        model_label: 模型（可选）
-        model_placeholder: gpt-4.1（默认）
-        json_mode_label: JSON 模式
-        json_mode_auto: 自动（推荐）
-        json_mode_strict: 严格（最适合思考模型）
-        json_mode_none: 无（最适合标准模型）
-        json_mode_json_object: JSON 对象
-        json_mode_help: 严格模式最适合思考模型（qwen-thinking、deepseek-reasoner）。无模式最适合标准模型（llama、mistral、gpt-oss）。
         budget_heading: Token 预算
-        budget_description: 适用于每次 LLM 调用——聊天历史、自动分类、商户识别和 PDF 处理。默认值针对小上下文本地模型较为保守，云端大上下文模型可适当调高。
+        budget_description: 控制每次 AI 请求可使用的 Token 上限。
         context_window_label: 上下文窗口（可选）
-        context_window_help: "模型接受的总 token 数。默认值：2048——对于云端 OpenAI 或大上下文本地模型，可调至 8192 以上。"
-        max_response_tokens_label: 最大响应 Token 数（可选）
-        max_response_tokens_help: "为模型回复保留的 token 数。默认值：512。适当降低可为更长的历史腾出空间。"
-        max_items_per_call_label: 每批最大条目数（可选）
-        max_items_per_call_help: "自动分类/商户识别批次的上限。默认值：25。较大的批次会自动切分以适应上下文窗口。"
-        title: OpenAI 设置
+        context_window_help: 留空时使用模型默认上下文窗口。
+        max_response_tokens_label: 最大响应 Token（可选）
+        max_response_tokens_help: 限制模型单次回答可生成的 Token 数。
+        max_items_per_call_label: 每次调用最大项目数
+        max_items_per_call_help: 限制单次请求传给模型的数据项数量。
       provider_selection:
-        exchange_rate_title: 汇率数据提供商
-        exchange_rate_description: 选择用于获取货币汇率的单一提供商。
-        exchange_rate_provider_label: 汇率数据提供商
-        securities_title: 证券数据提供商
-        securities_description: 启用一个或多个用于获取股票、ETF 和共同基金价格的提供商。搜索时将查询所有已启用的提供商并合并结果。
-        env_configured_message: 提供商选择已禁用，因为已设置环境变量。如需在此处启用选择，请从配置中移除这些环境变量。
-        twelve_data_hint: 需要 API 密钥，每日 800 次额度
-        yahoo_finance_hint: 免费，无需 API 密钥
-        requires_api_key: 需要 API 密钥
-        requires_api_key_eodhd: 需要 API 密钥，每日限制 20 次调用
-        requires_api_key_alpha_vantage: 需要 API 密钥，每日限制 25 次调用
-        mfapi_hint: 免费，无需 API 密钥——仅支持印度共同基金
-        binance_public_hint: 免费，无需 API 密钥——仅支持加密货币（BTC、ETH 等）
-        sina_finance_hint: 免费，无需 API 密钥——仅支持中国 A 股和场内基金
         providers:
           twelve_data: Twelve Data
           yahoo_finance: Yahoo Finance
@@ -73,80 +55,34 @@ zh-CN:
           alpha_vantage: Alpha Vantage
           mfapi: MFAPI.in
           binance_public: Binance
-          sina_finance: 新浪财经
+          moex_public: MOEX
         securities_provider_label: 证券（股票价格）数据提供商
         title: 数据提供商选择
-      assistant_settings:
-        title: AI 助手
-        description: 选择聊天助手的响应方式。内置模式直接使用您配置的 LLM 提供商；外部模式则委托给远程 AI 代理，该代理可通过 MCP 调用 Sure 的金融工具。
-        type_label: 助手类型
-        type_builtin: 内置（直连 LLM）
-        type_external: 外部（远程代理）
-        external_status: 外部助手端点
-        external_configured: 已配置
-        external_not_configured: 未配置。请在下方输入 URL 和令牌，或设置 EXTERNAL_ASSISTANT_URL 和 EXTERNAL_ASSISTANT_TOKEN 环境变量。
-        env_notice: "助手类型已通过 ASSISTANT_TYPE 环境变量锁定为\"%{type}\"。"
-        env_configured_external: 已通过环境变量成功配置。
-        url_label: 端点 URL
-        url_placeholder: "https://your-agent-host/v1/chat"
-        url_help: 您的代理 API 端点的完整 URL，由您的代理提供商提供。
-        token_label: API 令牌
-        token_placeholder: 输入您的代理提供商提供的令牌
-        token_help: 您的外部代理提供的身份验证令牌，每次请求将以 Bearer 令牌的形式发送。
-        agent_id_label: 代理 ID（可选）
-        agent_id_placeholder: "main（默认）"
-        agent_id_help: 当提供商托管多个代理时，用于路由到特定代理。留空则使用默认代理。
-        disconnect_title: 外部连接
-        disconnect_description: 移除外部助手连接并切换回内置助手。
-        disconnect_button: 断开连接
-        confirm_disconnect:
-          title: 断开外部助手连接？
-          body: 这将移除已保存的 URL、令牌和代理 ID，并切换为内置助手。您可以稍后通过输入新凭据重新连接。
+        exchange_rate_title: 汇率提供商
+        exchange_rate_description: 选择用于同步汇率数据的提供商。
+        securities_title: 证券价格提供商
+        securities_description: 选择用于同步证券和投资价格的提供商。
+        twelve_data_hint: Twelve Data 支持股票、ETF 和部分基金价格。
+        yahoo_finance_hint: Yahoo Finance 可作为免密钥价格来源。
+        requires_api_key: 需要 API Key
+        requires_api_key_eodhd: EODHD 需要 API Token。
+        requires_api_key_alpha_vantage: Alpha Vantage 需要 API Key。
+        mfapi_hint: MFAPI.in 可用于部分印度基金数据。
+        binance_public_hint: Binance 公共接口可用于加密资产行情。
+        sina_finance_hint: 免费，无需 API 密钥——仅支持中国 A 股和场内基金
+        moex_public_hint: 免费，无需 API 密钥 -- 俄罗斯股票、基金和债券（MOEX），包括 RUB 外汇
       show:
-        general: 通用设置
-        ai_assistant: AI 助手
-        financial_data_providers: 金融数据提供商
-        sync_settings: 同步设置
-        invites: 邀请码设置
-        title: 自托管配置
-        danger_zone: 高风险操作
         clear_cache: 清除数据缓存
         clear_cache_warning: 清除数据缓存将移除所有汇率、证券价格、账户余额及其他数据。这不会删除账户、交易记录、分类或其他用户自有数据。
         confirm_clear_cache:
           title: 确认清除数据缓存？
-          body: 确定要清除数据缓存吗？这将移除所有汇率、证券价格、账户余额及其他数据，且不可撤销。
-      tiingo_settings:
-        title: Tiingo
-        description: 请输入 Tiingo 提供的 API 令牌。免费套餐支持每小时 50 个独特代码，并提供 30 年以上的历史数据。
-        env_configured_message: 已通过 TIINGO_API_KEY 环境变量成功配置。
-        label: API 令牌
-        placeholder: 在此输入您的 Tiingo API 令牌
-        show_details: （显示详情）
-        step_1_html: '访问 <a href="https://www.tiingo.com" target="_blank" rel="noopener noreferrer" class="underline">tiingo.com</a> 并创建免费账户。'
-        step_2_html: '前往 <a href="https://www.tiingo.com/account/api/token" target="_blank" rel="noopener noreferrer" class="underline">API Token</a> 页面。'
-        step_3: 复制您的 API 令牌并粘贴至下方。
-      eodhd_settings:
-        title: EODHD
-        description: 请输入 EODHD 提供的 API 令牌。支持 LSE、XETRA 等交易所的欧盟 ETF。
-        env_configured_message: 已通过 EODHD_API_KEY 环境变量成功配置。
-        label: API 令牌
-        placeholder: 在此输入您的 EODHD API 令牌
-        show_details: （显示详情）
-        step_1_html: '访问 <a href="https://eodhd.com/register" target="_blank" rel="noopener noreferrer" class="underline">eodhd.com</a> 并创建免费账户。'
-        step_2_html: '前往您的 <a href="https://eodhd.com/cp/dashboard" target="_blank" rel="noopener noreferrer" class="underline">仪表盘</a> 查找您的 API 令牌。'
-        step_3: 复制您的 API 令牌并粘贴至下方。
-        rate_limit_warning: EODHD 免费套餐每日限制 20 次 API 调用，最适合作为其他提供商无法覆盖的欧盟 ETF 的补充提供商。
-      alpha_vantage_settings:
-        title: Alpha Vantage
-        description: 请输入 Alpha Vantage 提供的 API 密钥。支持伦敦证券交易所、XETRA 及其他交易所的欧盟 ETF。
-        env_configured_message: 已通过 ALPHA_VANTAGE_API_KEY 环境变量成功配置。
-        label: API 密钥
-        placeholder: 在此输入您的 Alpha Vantage API 密钥
-        show_details: （显示详情）
-        step_1_html: '访问 <a href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noopener noreferrer" class="underline">alphavantage.co</a> 并申请免费 API 密钥。'
-        step_2: 复制 API 密钥并粘贴至下方。
-        rate_limit_warning: Alpha Vantage 免费套餐每日限制 25 次 API 调用，最适合作为其他提供商无法覆盖的欧盟 ETF 的补充提供商。
-        no_health_check_note: 由于严格的访问频率限制，此提供商不支持连接健康检查。
+        danger_zone: 高风险操作
+        financial_data_providers: 金融数据提供商
+        general: 通用设置
+        invites: 邀请码设置
+        title: 自托管配置
+        ai_assistant: AI 助手
+        sync_settings: 同步设置
       twelve_data_settings:
         api_calls_used: 已使用 %{used} / %{limit} 次每日 API 调用（%{percentage}）
         description: 请输入 Twelve Data 提供的 API 密钥
@@ -167,19 +103,11 @@ zh-CN:
         failure: 设置值无效
         invalid_onboarding_state: 无效的新用户注册状态
         success: 设置已更新
-        invalid_sync_time: 同步时间格式无效，请使用 HH:MM 格式（例如：02:30）。
+        invalid_sync_time: 同步时间无效。
         invalid_llm_budget: "%{field} 必须是大于等于 %{minimum} 的整数。"
-        scheduler_sync_failed: 设置已保存，但更新同步计划失败。请重试或检查服务器日志。
-      disconnect_external_assistant:
-        external_assistant_disconnected: 外部助手已断开连接
-      sync_settings:
-        auto_sync_label: 启用自动同步
-        auto_sync_description: 启用后，所有账户将在指定时间每日自动同步。
-        auto_sync_time_label: 同步时间（HH:MM）
-        auto_sync_time_description: 指定自动同步每天执行的时间。
-        include_pending_label: 包含待处理交易
-        include_pending_description: 启用后，待处理（未清算）交易将被导入，并在入账时自动核对。如果您的银行提供不可靠的待处理数据，请禁用此选项。
-        env_configured_message: 此设置已禁用，因为已设置提供商环境变量（SIMPLEFIN_INCLUDE_PENDING 或 PLAID_INCLUDE_PENDING）。移除该环境变量即可启用此设置。
+        invalid_anthropic_base_url: Anthropic Base URL 无效。
+        anthropic_model_required_for_base_url: 设置 Anthropic Base URL 时必须填写模型。
+        scheduler_sync_failed: 设置已保存，但同步计划更新失败。请重试或检查服务器日志。
       yahoo_finance_settings:
         connection_failed: 无法连接到 Yahoo Finance
         description: Yahoo Finance 提供免费的股票价格、汇率和金融数据访问，无需 API 密钥。
@@ -187,3 +115,99 @@ zh-CN:
         status_inactive: Yahoo Finance 连接失败
         title: Yahoo Finance 设置
         troubleshooting: 请检查您的互联网连接和防火墙设置。Yahoo Finance 可能暂时不可用。
+      assistant_settings:
+        title: AI 助手
+        description: 配置 Sure 使用的 AI 助手模式。
+        type_label: 助手类型
+        type_builtin: 内置（直接调用 LLM）
+        type_external: 外部（远程代理）
+        external_status: 外部助手端点
+        external_configured: 已配置
+        external_not_configured: 外部助手尚未配置。
+        env_notice: 已通过环境变量配置 %{type}。
+        env_configured_external: 外部助手已通过环境变量配置。
+        url_label: 端点 URL
+        url_placeholder: 输入外部助手端点 URL
+        url_help: 外部助手服务的完整访问地址。
+        token_label: API 令牌
+        token_placeholder: 输入 API 令牌
+        token_help: 用于验证外部助手请求的令牌。
+        agent_id_label: Agent ID（可选）
+        agent_id_placeholder: main（默认）
+        agent_id_help: 留空时使用默认代理。
+        disconnect_title: 外部连接
+        disconnect_description: 断开当前外部助手连接。
+        disconnect_button: 断开连接
+        confirm_disconnect:
+          title: 断开外部助手？
+          body: 断开后将无法继续使用此远程助手。
+      llm_provider_selector:
+        title: AI 提供商
+        description: 选择 Sure 调用的 LLM 提供商。
+        env_configured_message: 已通过环境变量配置 LLM 提供商。
+        provider_label: 当前 LLM 提供商
+        provider_openai: OpenAI
+        provider_anthropic: Anthropic (Claude)
+        provider_help: 更改后会影响新的 AI 请求。
+        not_configured_hint: "%{provider} 尚未配置。"
+        data_retention_heading: 数据处理
+        data_retention: 发送给 AI 提供商的数据可能包含财务上下文，请按你的部署策略配置。
+      anthropic_settings:
+        title: Anthropic (Claude)
+        description: 使用 Anthropic Claude 作为 AI 提供商。
+        env_configured_message: 已通过环境变量配置 Anthropic。
+        access_token_label: API 密钥
+        access_token_placeholder: 输入 Anthropic API Key
+        base_url_label: Base URL（可选）
+        base_url_placeholder: 自定义 Anthropic Base URL
+        model_label: 默认模型（可选）
+        model_placeholder: claude-sonnet-4-6（默认）
+        model_help: 留空时使用系统默认模型。
+      tiingo_settings:
+        title: Tiingo
+        description: 使用 Tiingo 同步证券价格。
+        env_configured_message: 已通过环境变量配置 Tiingo。
+        label: API 令牌
+        placeholder: 粘贴 Tiingo API Token
+        show_details: "（显示详情）"
+        step_1_html: 注册或登录 Tiingo。
+        step_2_html: 前往 <a href="https://www.tiingo.com/account/api/token" target="_blank" rel="noopener noreferrer" class="underline">API Token</a> 页面。
+        step_3: 复制 API Token 并粘贴到下方。
+      eodhd_settings:
+        title: EODHD
+        description: 使用 EODHD 同步证券价格。
+        env_configured_message: 已通过环境变量配置 EODHD。
+        label: API 令牌
+        placeholder: 粘贴 EODHD API Token
+        show_details: "（显示详情）"
+        step_1_html: 注册或登录 EODHD。
+        step_2_html: 打开 API Token 页面。
+        step_3: 复制 API Token 并粘贴到下方。
+        rate_limit_warning: 免费或低阶计划可能有调用频率限制。
+      alpha_vantage_settings:
+        title: Alpha Vantage
+        description: 使用 Alpha Vantage 同步证券价格。
+        env_configured_message: 已通过环境变量配置 Alpha Vantage。
+        label: API 密钥
+        placeholder: 粘贴 Alpha Vantage API Key
+        show_details: "（显示详情）"
+        step_1_html: 注册或登录 Alpha Vantage。
+        step_2: 前往 API Key 页面并复制密钥。
+        rate_limit_warning: 免费计划可能有调用频率限制。
+        no_health_check_note: 此提供商暂无健康检查。
+      disconnect_external_assistant:
+        external_assistant_disconnected: 外部助手已断开连接。
+      ensure_admin:
+        not_authorized: 您没有执行此操作的权限。
+      ensure_super_admin_for_onboarding:
+        not_authorized: 只有超级管理员可以访问此设置。
+      sync_auto_sync_scheduler!:
+        scheduler_sync_failed: 自动同步计划更新失败。
+      sync_settings:
+        auto_sync_label: 启用自动同步
+        auto_sync_description: 按计划自动同步已连接账户。
+        auto_sync_time_label: 同步时间（HH:MM）
+        auto_sync_time_description: 每天触发自动同步的时间。
+        include_pending_label: 包含待处理交易
+        include_pending_description: 同步时同时拉取提供商返回的待处理交易。
+        env_configured_message: 已通过环境变量配置同步设置。
