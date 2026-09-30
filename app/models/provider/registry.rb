@@ -163,6 +163,8 @@ class Provider::Registry
 
       def sina_finance
         Provider::SinaFinance.new
+      end
+
       def moex_public
         Provider::MoexPublic.new
       end
@@ -241,5 +243,4 @@ class Provider::Registry
         %i[plaid_us plaid_eu github openai anthropic]
       end
     end
-  end
 end

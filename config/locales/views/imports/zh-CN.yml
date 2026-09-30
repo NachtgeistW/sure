@@ -263,17 +263,6 @@ zh-CN:
         status: 状态
         actions: 操作
       row:
-        type_labels:
-          transaction_import: 交易记录
-          trade_import: 交易
-          account_import: 账户
-          mint_import: Mint
-          qif_import: QIF
-          category_import: 分类
-          rule_import: 规则
-          pdf_import: PDF
-          document_import: 文档
-          sure_import: Sure
         status:
           in_progress: 进行中
           uploading: 处理行数据中
