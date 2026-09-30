@@ -159,6 +159,81 @@ class SnaptradeAccountProcessorTest < ActiveSupport::TestCase
     assert_equal "CHF", @account.currency
   end
 
+  # === /positions/all payload shape ===
+
+  test "holdings processor creates holdings from a positions/all payload" do
+    security = securities(:aapl)
+
+    @snaptrade_account.update!(
+      raw_holdings_payload: [
+        {
+          "instrument" => {
+            "kind" => "stock",
+            "symbol" => security.ticker,
+            "raw_symbol" => security.ticker,
+            "description" => security.name,
+            "currency" => "USD",
+            "exchange" => "XNAS"
+          },
+          "units" => "10",
+          "price" => "77.885",
+          "cost_basis" => "30",
+          "currency" => "USD"
+        }
+      ]
+    )
+
+    SnaptradeAccount::HoldingsProcessor.new(@snaptrade_account).process
+
+    holding = @account.holdings.find_by(security: security)
+    assert_not_nil holding
+    assert_equal BigDecimal("10"), holding.qty
+    assert_equal BigDecimal("77.885"), holding.price
+  end
+
+  test "holdings processor reads cost_basis as a per-share value" do
+    security = securities(:aapl)
+
+    @snaptrade_account.update!(
+      raw_holdings_payload: [
+        {
+          "instrument" => { "kind" => "stock", "symbol" => security.ticker, "currency" => "USD" },
+          "units" => "10",
+          "price" => "77.885",
+          "cost_basis" => "30",
+          "currency" => "USD"
+        }
+      ]
+    )
+
+    SnaptradeAccount::HoldingsProcessor.new(@snaptrade_account).process
+
+    holding = @account.holdings.find_by(security: security)
+    assert_not_nil holding
+    assert_equal BigDecimal("30"), holding.cost_basis
+    assert_equal "provider", holding.cost_basis_source
+  end
+
+  test "cash-equivalent positions are recognised in a positions/all payload" do
+    security = securities(:aapl)
+
+    @snaptrade_account.update!(
+      currency: "USD",
+      cash_balance: BigDecimal("1000.00"),
+      raw_holdings_payload: [
+        {
+          "instrument" => { "kind" => "mutualfund", "symbol" => security.ticker, "currency" => "USD" },
+          "units" => "100",
+          "price" => "1.00",
+          "currency" => "USD",
+          "cash_equivalent" => true
+        }
+      ]
+    )
+
+    assert_equal BigDecimal("100"), @snaptrade_account.cash_equivalent_position_value("USD")
+  end
+
   # === ActivitiesProcessor Tests ===
 
   test "activities processor maps BUY type to Buy label" do
@@ -321,6 +396,68 @@ class SnaptradeAccountProcessorTest < ActiveSupport::TestCase
     assert_equal 1, entries.count
   end
 
+  test "activities processor handles SPLIT as zero-amount trade" do
+    security = securities(:aapl)
+
+    @snaptrade_account.update!(
+      raw_activities_payload: [
+        {
+          "id" => "activity_split_1",
+          "type" => "SPLIT",
+          "symbol" => { "symbol" => security.ticker, "description" => security.name },
+          "units" => "10",
+          "price" => "150.00",
+          "amount" => "1500.00",
+          "settlement_date" => Date.current.to_s,
+          "currency" => "USD"
+        }
+      ]
+    )
+
+    processor = SnaptradeAccount::ActivitiesProcessor.new(@snaptrade_account)
+    result = processor.process
+
+    assert_equal 1, result[:trades]
+    trade_entry = @account.entries.find_by(external_id: "activity_split_1")
+    assert_not_nil trade_entry
+    assert_equal "Other", trade_entry.entryable.investment_activity_label
+    assert_equal 10, trade_entry.entryable.qty
+    assert_equal 0.0, trade_entry.amount.to_f
+  end
+
+  test "activities processor handles internal cash transfers with proper inflow and outflow signs" do
+    @snaptrade_account.update!(
+      raw_activities_payload: [
+        {
+          "id" => "activity_xfer_in_1",
+          "type" => "INTERNAL_CASH_TRANSFER_IN",
+          "amount" => "500.00",
+          "settlement_date" => Date.current.to_s,
+          "currency" => "USD"
+        },
+        {
+          "id" => "activity_xfer_out_1",
+          "type" => "INTERNAL_CASH_TRANSFER_OUT",
+          "amount" => "200.00",
+          "settlement_date" => Date.current.to_s,
+          "currency" => "USD"
+        }
+      ]
+    )
+
+    processor = SnaptradeAccount::ActivitiesProcessor.new(@snaptrade_account)
+    result = processor.process
+
+    assert_equal 2, result[:transactions]
+    in_entry = @account.entries.find_by(external_id: "activity_xfer_in_1")
+    assert_equal "Transfer", in_entry.entryable.investment_activity_label
+    assert_equal(-500.00, in_entry.amount.to_f)
+
+    out_entry = @account.entries.find_by(external_id: "activity_xfer_out_1")
+    assert_equal "Transfer", out_entry.entryable.investment_activity_label
+    assert_equal 200.00, out_entry.amount.to_f
+  end
+
   # === Multi-currency cash (issue #1809) ===
 
   test "upsert_balances! persists all entries and keeps the primary currency in cash_balance" do
@@ -380,6 +517,155 @@ class SnaptradeAccountProcessorTest < ActiveSupport::TestCase
     assert eur_cash, "processor must run the holdings processor so secondary-currency cash is surfaced even with no stock holdings"
   end
 
+  # === Cash-equivalent positions (money market / sweep funds) ===
+  #
+  # SnapTrade includes money market funds in the balances endpoint's `cash`
+  # figure AND returns them as positions with `cash_equivalent: true`.
+  # Counting both inflates the account total (e.g. Fidelity SPAXX).
+
+  test "processor does not double count cash-equivalent positions included in cash balance" do
+    security = securities(:aapl)
+    Account.any_instance.stubs(:set_current_balance)
+
+    @snaptrade_account.update!(
+      currency: "USD",
+      cash_balance: BigDecimal("5000.00"),
+      raw_holdings_payload: [
+        {
+          "symbol" => {
+            "symbol" => { "symbol" => "SPAXX", "description" => "Fidelity Government Money Market Fund" }
+          },
+          "units" => "4000",
+          "price" => "1.00",
+          "currency" => "USD",
+          "cash_equivalent" => true
+        },
+        {
+          "symbol" => {
+            "symbol" => { "symbol" => security.ticker, "description" => security.name }
+          },
+          "units" => "10",
+          "price" => "150.00",
+          "currency" => "USD"
+        }
+      ],
+      raw_activities_payload: []
+    )
+
+    SnaptradeAccount::Processor.new(@snaptrade_account).process
+
+    @account.reload
+    assert_equal BigDecimal("1000.00"), @account.cash_balance, "cash-equivalent position value must be subtracted from cash"
+    assert_equal BigDecimal("6500.00"), @account.balance, "total must count the money market fund only once (1500 stock + 4000 MMF + 1000 cash)"
+
+    spaxx = @account.holdings.joins(:security).where(securities: { ticker: "SPAXX" }).order(date: :desc).first
+    assert_not_nil spaxx, "the cash-equivalent position is still imported as a holding"
+    assert_equal BigDecimal("4000"), spaxx.amount
+
+    debug_entries = DebugLogEntry.where(category: "provider_sync", provider_key: "snaptrade")
+    assert_equal 1, debug_entries.count, "the exclusion is recorded once in /settings/debug"
+    assert_equal "4000.0", debug_entries.first.metadata["cash_equivalent_value"]
+  end
+
+  test "cash balance may go negative when cash-equivalent value exceeds reported cash and is recorded for support" do
+    Account.any_instance.stubs(:set_current_balance)
+
+    # A stale holdings snapshot (or real margin) can make the cash-equivalent
+    # value exceed reported cash. No floor is applied — negative cash is
+    # legitimate for margin — but before/after values are recorded so support
+    # can tell the two apart in /settings/debug.
+    @snaptrade_account.update!(
+      currency: "USD",
+      cash_balance: BigDecimal("100.00"),
+      raw_holdings_payload: [
+        {
+          "symbol" => {
+            "symbol" => { "symbol" => "SPAXX", "description" => "Fidelity Government Money Market Fund" }
+          },
+          "units" => "4000",
+          "price" => "1.00",
+          "currency" => "USD",
+          "cash_equivalent" => true
+        }
+      ],
+      raw_activities_payload: []
+    )
+
+    SnaptradeAccount::Processor.new(@snaptrade_account).process
+
+    @account.reload
+    assert_equal BigDecimal("-3900.00"), @account.cash_balance, "negative cash is preserved, not floored"
+
+    entry = DebugLogEntry.where(category: "provider_sync", provider_key: "snaptrade").order(created_at: :desc).first
+    assert_equal "100.0", entry.metadata["cash_balance_before"]
+    assert_equal "-3900.0", entry.metadata["cash_balance_after"]
+  end
+
+  test "cash-equivalent positions are subtracted in the stored cash currency when it falls back to USD" do
+    Account.any_instance.stubs(:set_current_balance)
+
+    # CAD account with no CAD cash entry: upsert_balances!' USD fallback means
+    # cash_balance is denominated in USD, so the USD money market fund must be
+    # subtracted from it even though it doesn't match the account currency.
+    @snaptrade_account.update!(
+      currency: "CAD",
+      current_balance: BigDecimal("10000.00"),
+      cash_balance: BigDecimal("5000.00"),
+      raw_balances_payload: [
+        { "currency" => { "code" => "USD" }, "cash" => "5000.00" }
+      ],
+      raw_holdings_payload: [
+        {
+          "symbol" => {
+            "symbol" => { "symbol" => "SPAXX", "description" => "Fidelity Government Money Market Fund" }
+          },
+          "units" => "4000",
+          "price" => "1.00",
+          "currency" => "USD",
+          "cash_equivalent" => true
+        }
+      ],
+      raw_activities_payload: []
+    )
+
+    SnaptradeAccount::Processor.new(@snaptrade_account).process
+
+    @account.reload
+    assert_equal BigDecimal("1000.00"), @account.cash_balance, "USD cash-equivalent position must be subtracted from the USD-denominated cash balance"
+    assert_equal BigDecimal("10000.00"), @account.balance, "multi-currency holdings still use the API total"
+  end
+
+  test "cash-equivalent positions in a non-primary currency reduce that currency's synthetic cash holding" do
+    @snaptrade_account.update!(
+      currency: "USD",
+      cash_balance: BigDecimal("1500.00"),
+      raw_balances_payload: [
+        { "currency" => { "code" => "USD" }, "cash" => "1500.00" },
+        { "currency" => { "code" => "EUR" }, "cash" => "800.00" }
+      ],
+      raw_holdings_payload: [
+        {
+          "symbol" => {
+            "symbol" => { "symbol" => "EURMM", "description" => "Euro Money Market Fund" }
+          },
+          "units" => "300",
+          "price" => "1.00",
+          "currency" => "EUR",
+          "cash_equivalent" => true
+        }
+      ]
+    )
+
+    SnaptradeAccount::HoldingsProcessor.new(@snaptrade_account).process
+
+    eur_cash = @account.holdings.joins(:security).where(securities: { kind: "cash" }, currency: "EUR").order(date: :desc).first
+    assert_not_nil eur_cash
+    assert_equal BigDecimal("500"), eur_cash.qty, "EUR synthetic cash must exclude the EUR cash-equivalent position (800 - 300)"
+
+    eur_mmf = @account.holdings.joins(:security).where(securities: { ticker: "EURMM" }).order(date: :desc).first
+    assert_not_nil eur_mmf, "the EUR cash-equivalent position is still imported as a holding"
+  end
+
   test "non-primary cash holding is not duplicated across repeated syncs" do
     @snaptrade_account.update!(
       currency: "USD",
@@ -393,5 +679,116 @@ class SnaptradeAccountProcessorTest < ActiveSupport::TestCase
 
     eur_cash = @account.holdings.joins(:security).where(securities: { kind: "cash" }, currency: "EUR")
     assert_equal 1, eur_cash.select(:external_id).distinct.count
+  end
+
+  # === Full Account Sync Integration ===
+
+  test "processor synchronizes balances, holdings, and activities end-to-end without cash distortion" do
+    security = securities(:aapl)
+
+    @snaptrade_account.update!(
+      currency: "USD",
+      current_balance: BigDecimal("5000.00"),
+      cash_balance: BigDecimal("1500.00"),
+      raw_holdings_payload: [
+        {
+          "symbol" => {
+            "symbol" => { "symbol" => security.ticker, "description" => security.name }
+          },
+          "units" => "20",
+          "price" => "175.00",
+          "currency" => "USD"
+        }
+      ],
+      raw_activities_payload: [
+        {
+          "id" => "activity_full_split",
+          "type" => "SPLIT",
+          "symbol" => { "symbol" => security.ticker },
+          "units" => "10",
+          "price" => "175.00",
+          "amount" => "1750.00",
+          "settlement_date" => Date.current.to_s,
+          "currency" => "USD"
+        },
+        {
+          "id" => "activity_full_xfer",
+          "type" => "INTERNAL_CASH_TRANSFER_IN",
+          "amount" => "300.00",
+          "settlement_date" => Date.current.to_s,
+          "currency" => "USD"
+        }
+      ]
+    )
+
+    result = SnaptradeAccount::Processor.new(@snaptrade_account).process
+
+    assert result[:holdings_processed]
+    assert result[:activities_processed]
+
+    @account.reload
+    assert_equal BigDecimal("5000.00"), @account.balance
+    assert_equal BigDecimal("1500.00"), @account.cash_balance
+
+    holding = @account.holdings.find_by(security: security)
+    assert_not_nil holding
+    assert_equal BigDecimal("20"), holding.qty
+
+    split_entry = @account.entries.find_by(external_id: "activity_full_split")
+    assert_not_nil split_entry
+    assert_equal "Other", split_entry.entryable.investment_activity_label
+    assert_equal 0.0, split_entry.amount.to_f
+
+    xfer_entry = @account.entries.find_by(external_id: "activity_full_xfer")
+    assert_not_nil xfer_entry
+    assert_equal "Transfer", xfer_entry.entryable.investment_activity_label
+    assert_equal(-300.00, xfer_entry.amount.to_f)
+  end
+
+  test "processor cleanly reclassifies pre-existing activity from transaction to trade on resync" do
+    security = securities(:aapl)
+
+    # 1. Simulate an entry already synced as a Transaction under old code
+    stale_entry = @account.entries.create!(
+      external_id: "resync_split_001",
+      source: "snaptrade",
+      amount: 1750.00,
+      currency: "USD",
+      date: Date.current,
+      name: "DISTRIBUTION AAPL",
+      entryable: Transaction.new(investment_activity_label: "Other")
+    )
+    stale_id = stale_entry.id
+
+    # 2. Configure raw payloads for the next sync
+    @snaptrade_account.update!(
+      raw_holdings_payload: [],
+      raw_activities_payload: [
+        {
+          "id" => "resync_split_001",
+          "type" => "SPLIT",
+          "symbol" => { "symbol" => security.ticker },
+          "units" => "10",
+          "price" => "0.0",
+          "amount" => "1750.00",
+          "settlement_date" => Date.current.to_s,
+          "currency" => "USD"
+        }
+      ]
+    )
+
+    # 3. Run full account processor
+    result = SnaptradeAccount::Processor.new(@snaptrade_account).process
+
+    assert result[:activities_processed]
+
+    # 4. Verify stale entry was reclassified to Trade
+    entry = @account.entries.find_by(external_id: "resync_split_001", source: "snaptrade")
+    assert_not_nil entry
+    assert_not_equal stale_id, entry.id
+    assert entry.entryable.is_a?(Trade)
+    assert_equal BigDecimal("10"), entry.entryable.qty
+    assert_equal 0.0, entry.amount.to_f
+    assert_equal 0.0, entry.entryable.price.to_f
   end
 end

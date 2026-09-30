@@ -32,6 +32,15 @@ class Settings::ApiKeysControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "new shows the name hint under the field and points the input at it" do
+    get new_settings_api_key_path
+    assert_response :success
+
+    assert_select "p#api_key_name_help_text", text: "Choose a descriptive name to help you identify this key later."
+    assert_select "input[name='api_key[name]'][aria-describedby=?]", "api_key_name_help_text"
+    assert_select "input[help_text]", count: 0
+  end
+
   test "create makes a new key without revoking existing keys" do
     existing = ApiKey.create!(
       user: @user,
@@ -199,5 +208,30 @@ class Settings::ApiKeysControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to settings_api_key_path(created_key, newly_created: true)
     assert_includes created_key.scopes, "read"
     assert_equal 64, created_key.plain_key.length
+  end
+
+  # API keys are user-scoped self-management: a member manages their own keys
+  # (a key carries only the owning user's permissions, and members reach this
+  # page via the Reports CSV/export flow). Do NOT add an admin gate here.
+  test "non-admin member can view API keys list" do
+    sign_in users(:family_member)
+    get settings_api_keys_path
+    assert_response :success
+  end
+
+  test "non-admin member can create their own API key" do
+    member = users(:family_member)
+    member.api_keys.destroy_all
+    sign_in member
+
+    assert_difference "ApiKey.count", 1 do
+      post settings_api_keys_path, params: {
+        api_key: { name: "Member Key", scopes: "read" }
+      }
+    end
+
+    new_key = member.api_keys.active.visible.find_by(name: "Member Key")
+    assert new_key.present?
+    assert_redirected_to settings_api_key_path(new_key, newly_created: true)
   end
 end

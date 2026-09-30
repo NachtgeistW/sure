@@ -4,10 +4,162 @@ tr:
     changelog:
       title: Yenilikler
     dashboard:
+      cashflow_preview:
+        node_labels:
+          cash_flow: "Nakit akışı"
+          surplus: "Fazla"
+          deficit: "Açık"
+        title: Yeni Sankey grafiği
+        preview: Önizleme
+        preview_tooltip: Bu grafik, mobil Swift istemcisiyle ortak kullanılan yeni bir API'ye dayandığı için yukarıdaki görselleştirmenin yerini alacak.
+        feedback_prompt: Bu grafiği yukarıdaki orijinaliyle karşılaştırın ve sıralama dışında farklı görünüyorsa bize bildirin.
+        positive: Doğru görünüyor
+        negative: Bir şeyler yanlış görünüyor
+        feedback_title: Nakit akışı grafiği geri bildirimi
+        feedback_loading: Geri bildirim formu yükleniyor…
+        feedback_unavailable: Geri bildirim şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.
+        feedback_thanks: Grafiği geliştirmemize yardımcı olduğunuz için teşekkürler!
+        feedback_privacy: Yanıtınız PostHog'a gönderilir. Sorunu hesap numaraları, bakiyeler veya diğer özel finansal bilgiler olmadan açıklayın.
+        feedback_submit: Geri bildirim gönder
+      balance_sheet:
+        add_accounts: Tam bir döküm görmek için %{name} hesaplarınızı ekleyin
+        add_asset_accounts: Tam bir döküm görmek için varlık hesaplarınızı ekleyin
+        add_liability_accounts: Tam bir döküm görmek için yükümlülük hesaplarınızı
+          ekleyin
+        classifications:
+          asset: Varlıklar
+          liability: Yükümlülükler
+        name: Ad
+        no_asset: Henüz varlık yok
+        no_items: Henüz %{name} yok
+        no_liability: Henüz yükümlülük yok
+        title: Bilanço
+        value: Değer
+        weight: Ağırlık
+        expand_all: Tümünü genişlet
+        collapse_all: Tümünü daralt
+      cashflow_sankey:
+        add_transaction: İşlem ekle
+        no_data_description: Nakit akışı verilerini görüntülemek için işlem ekleyin
+          veya zaman aralığını genişletin
+        no_data_title: Bu zaman aralığı için nakit akışı verisi yok
+        title: Nakit Akışı
+        zoom_out: Tam nakit akışına dön
+        loading: Nakit akışı yükleniyor…
+        load_error: Nakit akışı yüklenemedi. Lütfen tekrar deneyin.
+        retry: Tekrar dene
+      drag_to_reorder: Bölümü yeniden sıralamak için sürükleyin
+      insights_feed:
+        title: İçgörüler
+      investment_summary:
+        add_investment: Portföyünüzü takip etmek için bir yatırım hesabı ekleyin
+        contributions: Katkılar
+        holding: Varlık
+        no_investments: Yatırım hesabı yok
+        period_activity: "%{period} Etkinliği"
+        return: Getiri
+        title: Yatırımlar
+        total_return: Toplam Getiri
+        trades: Alım Satımlar
+        value: Değer
+        weight: Ağırlık
+        withdrawals: Çekimler
       net_worth_chart:
         data_not_available: Seçilen dönem için veri mevcut değil
         title: Net Değer
+      new: Yeni
       no_account_empty_state:
         new_account: Yeni hesap
-        no_account_subtitle: Henüz hiç hesap eklenmediği için gösterilecek veri yok. İlk hesaplarınızı ekleyerek gösterge paneli verilerini görmeye başlayın.
+        no_account_subtitle: Henüz hiç hesap eklenmediği için gösterilecek veri yok.
+          İlk hesaplarınızı ekleyerek gösterge paneli verilerini görmeye başlayın.
         no_account_title: Henüz hesap yok
+      no_accounts:
+        add_account: Hesap ekle
+        description: Net değer verilerini görüntülemek için hesap ekleyin
+        title: Henüz hesap yok
+      outflows_donut:
+        categories: Kategoriler
+        title: Çıkışlar
+        total_outflows: Toplam Çıkışlar
+        value: Değer
+        weight: Ağırlık
+      sections_aria_label: Gösterge paneli bölümleri
+      subtitle: Finansal durumunuzda neler oluyor, işte özeti
+      toggle_section: Bölüm görünürlüğünü değiştir
+      welcome: Tekrar hoş geldiniz, %{name}
+      widget_size:
+        auto: Otomatik
+        compact: Kompakt
+        full: Tam
+        half: Yarım
+        height_label: Yükseklik
+        label: Boyutu ayarla
+        tall: Uzun
+        width_label: Genişlik
+      money_flow:
+        title: Para Girişi / Çıkışı
+        date_range: '%{start_date} - %{end_date}'
+        month_picker_aria_label: Ay seçin
+        filter_accounts: Hesapları filtrele (%{count})
+        filter_accounts_all: Tüm hesaplar
+        period_scope_hint: Burada seçtiğiniz ayları gösterir — üstteki gösterge paneli zaman aralığından bağımsızdır.
+        search_accounts: Hesaplarda ara
+        apply: Uygula
+        balance: İşlem bakiyesi
+        chart_span: Son %{count} ay
+        income: Gelir
+        expenses: Giderler
+      spending_trend:
+        title: Harcama
+        date_range: '%{start_date} - %{end_date}'
+        date_range_short: '%{start_date} - %{end_day}, %{year}'
+        date_range_short_single: '%{date} %{year}'
+        month_picker_aria_label: Ay seçin
+        period_scope_hint: Burada seçtiğiniz ayı gösterir — üstteki gösterge paneli zaman aralığından bağımsızdır.
+        no_data: Bu ay için harcama verisi yok
+        previous_comparison_days: (1-%{end_day})
+    feedback:
+      bug_report: Hata bildirimi gönder
+      description: Belirli bir geri bildiriminiz varsa bize bildirin. Video veya ekran
+        görüntüsü bağlantıları eklemekten çekinmeyin.
+      discuss: "%{product} hakkında başkalarıyla tartışın"
+      feature_request: Özellik isteği yaz
+      heading: Geri bildirim bırakın
+      title: Geri bildirim
+    intro:
+      coming_soon: Tanıtım deneyimi yakında geliyor
+      description: Hedeflerinizi, kilometre taşlarınızı ve günlük ihtiyaçlarınızı
+        öğrenmek için daha zengin bir kurulum deneyimi geliştiriyoruz. Şimdilik, Sure
+        ile bir sohbet başlatmak için sohbet kenar çubuğuna gidin ve finansal yolculuğunuzda
+        nerede olduğunuzu bize bildirin.
+      not_authorized: Tanıtım yalnızca misafir kullanıcılar için kullanılabilir.
+      start_chatting: Sohbete başla
+      welcome: Hoş geldiniz!
+    privacy:
+      heading: Gizlilik Politikası
+      placeholder: Gizlilik politikası içeriği burada görüntülenecek.
+      title: Gizlilik Politikası
+    redis_configuration_error:
+      heading: Redis Yapılandırması Gerekiyor
+      page_title: Redis Yapılandırması Gerekiyor - Sure
+      refresh_hint: Redis'i yapılandırdıktan sonra, devam etmek için bu sayfayı yenileyin.
+      refresh_page: Sayfayı Yenile
+      setup_guide_hint: Redis'i yapılandırmak için eksiksiz Docker kurulum kılavuzumuzu
+        izleyin
+      subheading: Kendi sunucunuzda barındırdığınız Sure kurulumunun düzgün yapılandırılmış
+        bir Redis'e ihtiyacı var.
+      view_setup_guide: Kurulum Kılavuzunu Görüntüle
+      why_required_body: Sure, hesap verilerini senkronize etme, içe aktarmaları işleme
+        ve finansal verilerinizi güncel tutan diğer arka plan işlemleri gibi görevler
+        için Sidekiq arka plan işlerini çalıştırmak amacıyla Redis kullanır.
+      why_required_title: Redis neden gereklidir?
+    release_notes_unavailable:
+      body_html: "<p>Şu anda en son sürüm notları alınamıyor. Lütfen daha sonra tekrar
+        kontrol edin veya doğrudan <a href='https://github.com/we-promise/sure/releases'
+        target='_blank' rel='noopener noreferrer'>GitHub sürümler sayfamızı</a> ziyaret
+        edin.</p>"
+      name: Sürüm notları kullanılamıyor
+    terms:
+      heading: Kullanım Şartları
+      placeholder: Kullanım şartları içeriği burada görüntülenecek.
+      title: Kullanım Şartları

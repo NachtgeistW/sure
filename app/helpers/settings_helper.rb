@@ -63,6 +63,12 @@ module SettingsHelper
     when "up"
       return { status: :off } unless @up_items&.any?
       sync_based_summary(key)
+    when "monobank"
+      return { status: :off } unless @monobank_items&.any?
+      sync_based_summary(key)
+    when "fio"
+      return { status: :off } unless @fio_items&.any?
+      sync_based_summary(key)
     when "simplefin"
       return { status: :off } unless @simplefin_items&.any?
       sync_based_summary(key)
@@ -75,8 +81,14 @@ module SettingsHelper
     when "coinstats"
       return { status: :off } unless @coinstats_items&.any?
       sync_based_summary(key)
+    when "wise"
+      return { status: :off } unless @wise_items&.any?
+      sync_based_summary(key)
     when "mercury"
       return { status: :off } unless @mercury_items&.any?
+      sync_based_summary(key)
+    when "redbark"
+      return { status: :off } unless @redbark_items&.any?
       sync_based_summary(key)
     when "brex"
       return { status: :off } unless @brex_items&.any?
@@ -90,16 +102,24 @@ module SettingsHelper
     when "kraken"
       return { status: :off } unless @kraken_items&.any?
       sync_based_summary(key)
+    when "coinspot"
+      return { status: :off } unless @coinspot_items&.any?
+      sync_based_summary(key)
+    when "onchain_wallet"
+      return { status: :off } unless @onchain_wallet_items&.any?
+      sync_based_summary(key)
+    when "trading212"
+      return { status: :off } unless @trading212_items&.any?
+      sync_based_summary(key)
     when "snaptrade"
-      configured_item = @snaptrade_items&.find { |item| item.credentials_configured? || item.oauth_configured? }
+      configured_item = @snaptrade_items&.find(&:oauth_configured?)
       return { status: :off } unless configured_item
-
-      unless configured_item.user_registered?
-        return { status: :warn, meta: t("settings.providers.meta.registration_needed") }
-      end
       sync_based_summary(key)
     when "ibkr"
       return { status: :off } unless @ibkr_items&.any?
+      sync_based_summary(key)
+    when "trade_republic"
+      return { status: :off } unless @trade_republic_items&.any?
       sync_based_summary(key)
     when "indexa_capital"
       return { status: :off } unless @indexa_capital_items&.any?
@@ -107,9 +127,24 @@ module SettingsHelper
     when "sophtron"
       return { status: :off } unless @sophtron_items&.any?
       sync_based_summary(key)
+    when "questrade"
+      return { status: :off } unless @questrade_items&.any?
+      sync_based_summary(key)
     else
       { status: :off }
     end
+  end
+
+  def financekit_provider_summary(connections)
+    return { status: :off } if connections.empty?
+
+    items = connections.map { |connection| connection[:item] }
+    count = connections.flat_map { |connection| connection[:accounts].map(&:id) }.uniq.size
+    {
+      status: items.any? { |item| item.status == "repair_required" } ? :warn : :ok,
+      meta: t("settings.providers.financekit.linked_accounts", count: count),
+      last_synced_at: items.filter_map(&:last_imported_at).max
+    }
   end
 
   def settings_nav_footer
@@ -130,6 +165,38 @@ module SettingsHelper
       concat(previous_setting)
       concat(next_setting)
     end
+  end
+
+  def yahoo_finance_health_presentation(status)
+    status = status.to_sym if status.respond_to?(:to_sym)
+    status = :unknown unless %i[healthy rate_limited unavailable unknown].include?(status)
+
+    presentation = {
+      status_class: {
+        healthy: "bg-success",
+        rate_limited: "bg-warning",
+        unavailable: "bg-destructive",
+        unknown: "bg-surface-inset"
+      }.fetch(status),
+      status_text: t("settings.hostings.yahoo_finance_settings.status_#{status}")
+    }
+
+    presentation[:alert] = case status
+    when :rate_limited
+      {
+        title: t("settings.hostings.yahoo_finance_settings.rate_limited_title"),
+        message: t("settings.hostings.yahoo_finance_settings.rate_limited_message"),
+        variant: :warning
+      }
+    when :unavailable
+      {
+        title: t("settings.hostings.yahoo_finance_settings.unavailable_title"),
+        message: t("settings.hostings.yahoo_finance_settings.unavailable_message"),
+        variant: :warning
+      }
+    end
+
+    presentation
   end
 
   # Below this many synced accounts, the per-row pills already give the user
@@ -186,9 +253,9 @@ module SettingsHelper
 
       return { status: :err, meta: t("settings.providers.meta.sync_error"), last_synced_at: nil } if health[:error]
 
-      valid_items = @enable_banking_items&.select(&:session_valid?) || []
+      valid_items = @enable_banking_items&.reject(&:needs_authorization?) || []
 
-      # All items have expired/missing sessions — need re-authorization
+      # All items have expired, missing or rejected sessions — need re-authorization
       if valid_items.empty?
         return { status: :warn, meta: t("settings.providers.meta.reconsent_required"), last_synced_at: last_synced_at }
       end

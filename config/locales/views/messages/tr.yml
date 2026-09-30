@@ -1,0 +1,10 @@
+---
+tr:
+  messages:
+    chat_form:
+      disclaimer: AI yanıtları yalnızca bilgilendirme amaçlıdır. Finansal tavsiye
+        değildir!
+      placeholder: Herhangi bir şey sorun ...
+      coming_soon: Yakında
+    create:
+      chat_not_found: Bu sohbet artık mevcut değil.

@@ -19,6 +19,7 @@ class Invitation < ApplicationRecord
 
   before_validation :normalize_email
   before_validation :generate_token, on: :create
+  before_create :remove_expired_duplicates_in_family
   before_create :set_expiration
 
   scope :pending, -> { where(accepted_at: nil).where("expires_at > ?", Time.current) }
@@ -35,11 +36,29 @@ class Invitation < ApplicationRecord
     return false if would_orphan_owned_accounts?(user)
 
     transaction do
+      release_provider_item_ownership(user)
       user.update!(family_id: family_id, role: role.to_s)
       update!(accepted_at: Time.current)
-      auto_share_existing_accounts(user) if family.share_all_by_default?
+      family.auto_share_existing_accounts_with(user)
     end
     true
+  end
+
+  # would_orphan_owned_accounts? blocks the move when the user owns accounts
+  # that would be left behind, but a provider item can be owned without owning
+  # any account (it may have generated none yet, or its accounts belong to
+  # someone else). Such an item keeps its old family_id while its owner leaves,
+  # and the next save fails ProviderItemOwnable's same-family validation --
+  # which would leave the connection unsyncable. Release ownership instead: the
+  # item reverts to admin-managed, exactly as before ownership existed.
+  def release_provider_item_ownership(user)
+    return if user.family_id.blank? || user.family_id == family_id
+
+    ProviderItemOwnable.owned_item_classes.each do |item_class|
+      item_class.where(owner_id: user.id)
+                .where.not(family_id: family_id)
+                .update_all(owner_id: nil, updated_at: Time.current)
+    end
   end
 
   def would_orphan_owned_accounts?(user)
@@ -67,6 +86,29 @@ class Invitation < ApplicationRecord
 
     def set_expiration
       self.expires_at = 3.days.from_now
+    end
+
+    # An expired, never-accepted invitation still occupies the partial unique
+    # index `index_invitations_on_email_and_family_id_pending` (predicate
+    # `accepted_at IS NULL`), but the `pending` scope treats it as gone because
+    # of the `expires_at > now` clause. The duplicate-guard validation therefore
+    # passes, and the INSERT collides with the index, raising RecordNotUnique.
+    # Removing the stale row inside the create transaction frees the slot so the
+    # re-invite can proceed. It runs only after validations pass, so a still
+    # pending (non-expired) invitation can never be removed here.
+    def remove_expired_duplicates_in_family
+      return if email.blank?
+
+      scope = self.class.where(family_id: family_id, accepted_at: nil)
+                        .where("expires_at <= ?", Time.current)
+
+      scope = if self.class.encryption_ready?
+        scope.where(email: email)
+      else
+        scope.where("LOWER(email) = ?", email.to_s.strip.downcase)
+      end
+
+      scope.delete_all
     end
 
     def normalize_email
@@ -104,14 +146,5 @@ class Invitation < ApplicationRecord
 
     def inviter_is_admin
       inviter.admin?
-    end
-
-    def auto_share_existing_accounts(user)
-      records = family.accounts.where.not(owner_id: user.id).pluck(:id).map do |account_id|
-        { account_id: account_id, user_id: user.id, permission: "read_write",
-          include_in_finances: true, created_at: Time.current, updated_at: Time.current }
-      end
-
-      AccountShare.insert_all(records, unique_by: %i[account_id user_id]) if records.any?
     end
 end

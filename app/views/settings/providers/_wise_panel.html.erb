@@ -1,0 +1,156 @@
+<div id="wise-providers-panel" class="space-y-4">
+  <% active_items = local_assigns[:wise_items] || @wise_items || Current.family.wise_items.active.ordered %>
+
+  <%= render "settings/providers/setup_steps",
+             steps: [
+               t("wise_items.provider_panel.instructions.sign_in_html", link: link_to("Wise", "https://wise.com", target: "_blank", rel: "noopener noreferrer", class: "text-link underline")),
+               t("wise_items.provider_panel.instructions.open_tokens"),
+               t("wise_items.provider_panel.instructions.create_token"),
+               t("wise_items.provider_panel.instructions.copy_token_html")
+             ] %>
+
+  <% error_msg = local_assigns[:error_message] || @error_message %>
+  <% if error_msg.present? %>
+    <%= render DS::Alert.new(message: error_msg, variant: :error) %>
+  <% end %>
+
+  <% if active_items.any? %>
+    <div class="space-y-3">
+      <% active_items.each do |item| %>
+        <%= render DS::Disclosure.new(variant: :card) do |disclosure| %>
+          <% disclosure.with_summary_content do %>
+            <div class="flex items-center justify-between gap-2 w-full">
+              <div class="flex items-center gap-3">
+                <%= render ProviderLogo.new(provider_key: :wise) %>
+                <div>
+                  <p class="font-medium text-primary"><%= item.name %></p>
+                  <p class="text-xs text-secondary"><%= item.sync_status_summary %></p>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
+          <div class="mt-4 space-y-4">
+            <div class="flex items-center gap-2">
+              <%= render DS::Button.new(
+                text: t("wise_items.provider_panel.sync"),
+                icon: "refresh-cw",
+                variant: :outline,
+                size: :sm,
+                href: sync_wise_item_path(item),
+                method: :post,
+                disabled: item.syncing?
+              ) %>
+              <%= render DS::Button.new(
+                text: t("wise_items.provider_panel.disconnect"),
+                icon: "trash-2",
+                variant: :outline_destructive,
+                size: :sm,
+                href: wise_item_path(item),
+                method: :delete,
+                aria: { label: t("wise_items.provider_panel.disconnect_label", name: item.name) },
+                confirm: t("wise_items.provider_panel.disconnect_confirm", name: item.name)
+              ) %>
+            </div>
+
+            <div class="p-3 rounded-md bg-container-inset space-y-2">
+              <p class="text-sm font-medium text-primary"><%= t("wise_items.provider_panel.sca.title") %></p>
+              <p class="text-xs text-secondary"><%= t("wise_items.provider_panel.sca.description") %></p>
+
+              <% if item.sca_configured? %>
+                <p class="text-xs text-secondary"><%= t("wise_items.provider_panel.sca.public_key_label") %></p>
+                <div class="bg-container rounded-lg p-3 border border-primary" data-controller="clipboard" data-clipboard-copied-text-value="<%= t("wise_items.provider_panel.sca.copied") %>">
+                  <div class="flex flex-col items-start gap-2">
+                    <code class="font-mono text-xs text-primary break-all whitespace-pre-wrap" data-clipboard-target="source"><%= item.sca_public_key %></code>
+                    <%= render DS::Button.new(
+                      text: t("wise_items.provider_panel.sca.copy"),
+                      variant: "ghost",
+                      size: :sm,
+                      icon: "copy",
+                      data: { action: "clipboard#copy" }
+                    ) %>
+                  </div>
+                </div>
+                <p class="text-xs text-secondary"><%= t("wise_items.provider_panel.sca.registered_help_html").html_safe %></p>
+              <% end %>
+
+              <%= render DS::Button.new(
+                text: item.sca_configured? ? t("wise_items.provider_panel.sca.regenerate") : t("wise_items.provider_panel.sca.generate"),
+                icon: "key-round",
+                variant: :outline,
+                size: :sm,
+                href: generate_sca_keypair_wise_item_path(item),
+                method: :post,
+                confirm: item.sca_configured? ? t("wise_items.provider_panel.sca.regenerate_confirm") : nil
+              ) %>
+            </div>
+
+            <%= styled_form_with model: item,
+                                 url: wise_item_path(item),
+                                 scope: :wise_item,
+                                 method: :patch,
+                                 data: { turbo: true },
+                                 class: "space-y-3" do |form| %>
+              <%= form.text_field :name,
+                                  label: t("wise_items.provider_panel.connection_name_label"),
+                                  placeholder: t("wise_items.provider_panel.connection_name_placeholder") %>
+
+              <%= form.date_field :sync_start_date,
+                                  label: t("wise_items.provider_panel.sync_start_date_label"),
+                                  value: item.sync_start_date || 365.days.ago.to_date,
+                                  max: Date.current,
+                                  help_text: t("wise_items.provider_panel.sync_start_date_help") %>
+
+              <%= form.text_field :token,
+                                  label: t("wise_items.provider_panel.token_label"),
+                                  placeholder: t("wise_items.provider_panel.keep_token_placeholder"),
+                                  type: :password,
+                                  value: nil %>
+
+              <div class="flex flex-wrap justify-end gap-2">
+                <%= render DS::Link.new(
+                  text: t("wise_items.provider_panel.setup_accounts"),
+                  icon: "settings",
+                  variant: "secondary",
+                  href: setup_accounts_wise_item_path(item),
+                  frame: :modal
+                ) %>
+                <%= form.submit t("wise_items.provider_panel.update_connection") %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if active_items.any? %>
+    <%= render "settings/providers/add_connection_heading", label: t("wise_items.provider_panel.add_connection") %>
+  <% end %>
+
+  <%= styled_form_with url: wise_items_path,
+                       scope: :wise_item,
+                       method: :post,
+                       data: { turbo: true },
+                       class: "space-y-3" do |form| %>
+    <%= form.text_field :token,
+                        label: t("wise_items.provider_panel.token_label"),
+                        placeholder: t("wise_items.provider_panel.token_placeholder"),
+                        type: :password,
+                        value: nil %>
+
+    <p class="text-xs text-secondary px-1 -mt-1"><%= t("wise_items.provider_panel.sandbox_note_html").html_safe %></p>
+
+    <div class="flex items-center justify-between gap-3 py-2">
+      <div class="space-y-1">
+        <p class="text-sm text-primary"><%= t("wise_items.provider_panel.import_all_history_label") %></p>
+        <p class="text-secondary text-sm"><%= t("wise_items.provider_panel.import_all_history_help") %></p>
+      </div>
+      <%= form.toggle :import_all_history %>
+    </div>
+
+    <div class="flex justify-end">
+      <%= form.submit t("wise_items.provider_panel.connect") %>
+    </div>
+  <% end %>
+</div>

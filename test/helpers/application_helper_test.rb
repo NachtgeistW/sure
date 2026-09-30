@@ -44,10 +44,56 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal "Test Header Title", content_for(:header_title)
   end
 
+  test "#sidekiq_web_available? returns true when the route is mounted" do
+    named_routes = Struct.new(:defined) do
+      def route_defined?(name)
+        defined.fetch(name)
+      end
+    end
+
+    Rails.application.routes.stub(:named_routes, named_routes.new({ sidekiq_web_path: true })) do
+      assert sidekiq_web_available?
+    end
+  end
+
+  test "#sidekiq_web_available? returns false when the route is unavailable" do
+    named_routes = Struct.new(:defined) do
+      def route_defined?(name)
+        defined.fetch(name, false)
+      end
+    end
+
+    Rails.application.routes.stub(:named_routes, named_routes.new({})) do
+      assert_not sidekiq_web_available?
+    end
+  end
+
+  test "#sidekiq_web_available? returns true when only the url helper is defined" do
+    named_routes = Struct.new(:defined) do
+      def route_defined?(name)
+        defined.fetch(name, false)
+      end
+    end
+
+    Rails.application.routes.stub(:named_routes, named_routes.new({ sidekiq_web_url: true })) do
+      assert sidekiq_web_available?
+    end
+  end
+
   def setup
     @account1 = Account.new(currency: "USD", balance: 1)
     @account2 = Account.new(currency: "USD", balance: 2)
     @account3 = Account.new(currency: "EUR", balance: -7)
+  end
+
+  test "#styled_form_with keeps a field's help_text when the field has no label" do
+    html = styled_form_with(url: "/", scope: :account) do |form|
+      form.text_field :name, label: false, help_text: "Shown to everyone in the family"
+    end
+
+    fragment = Nokogiri::HTML.fragment(html)
+    assert_equal "Shown to everyone in the family", fragment.at("p#account_name_help_text")&.text
+    assert_equal "account_name_help_text", fragment.at("input[name='account[name]']")["aria-describedby"]
   end
 
   test "#totals_by_currency(collection: collection, money_method: money_method)" do

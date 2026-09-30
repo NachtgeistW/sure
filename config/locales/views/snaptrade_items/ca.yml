@@ -5,28 +5,17 @@ ca:
       accounts_count:
         one: "%{count} compte"
         other: "%{count} comptes"
-      client_id_label: Client ID
-      client_id_placeholder: Introdueix el teu Client ID de SnapTrade
-      client_id_update_placeholder: Introdueix un nou Client ID per actualitzar
       connect_button: Connecta un broker
       connected_brokerages: 'Connectats:'
       connection_description: Connecta't al teu broker a través de SnapTrade (25+
         brokers admesos)
       connections_error: 'No s''han pogut carregar les connexions: %{message}'
-      consumer_key_label: Consumer Key
-      consumer_key_placeholder: Introdueix la teva Consumer Key de SnapTrade
-      consumer_key_update_placeholder: Introdueix un nou Consumer Key per actualitzar
       delete_connection: Elimina
       delete_connection_body: Això eliminarà permanentment la connexió de %{brokerage}
         de SnapTrade. Tots els comptes d'aquest broker quedaran sense enllaçar. Hauràs
         de reconnectar per sincronitzar aquests comptes de nou.
       delete_connection_confirm: Elimina la connexió
       delete_connection_title: Vols eliminar la connexió amb el broker?
-      delete_orphaned_user: Elimina
-      delete_orphaned_user_body: Això eliminarà permanentment aquest usuari orfe de
-        SnapTrade i totes les seves connexions de broker, alliberant places de connexió.
-      delete_orphaned_user_confirm: Elimina el registre
-      delete_orphaned_user_title: Vols eliminar el registre orfe?
       description: SnapTrade connecta amb més de 25 brokers importants (Fidelity,
         Vanguard, Schwab, Robinhood, etc.) i proporciona l'historial complet d'operacions
         amb etiquetes d'activitat i cost base.
@@ -41,28 +30,22 @@ ca:
         other: "%{count} necessiten configuració"
       no_connections: No s'han trobat connexions de broker.
       orphaned_connection: Connexió orfe (no sincronitzada localment)
-      orphaned_user: Registre orfe
-      orphaned_users_description: Aquests són registres d'usuari de SnapTrade anteriors
-        que ocupen places de connexió. Elimina'ls per alliberar places.
-      orphaned_users_title:
-        one: "%{count} registre orfe"
-        other: "%{count} registres orfes"
-      save_button: Desa la configuració
       setup_accounts_button: Configura comptes
-      setup_title: 'Instruccions de configuració:'
       status_connected:
         one: "%{count} compte de SnapTrade"
         other: "%{count} comptes de SnapTrade"
-      status_needs_registration: Credencials desades. Finalitza la configuració per
-        connectar un broker.
       status_ready: Llest per connectar brokers
-      step_1_html: Crea un compte a <a href="https://dashboard.snaptrade.com" target="_blank"
-        rel="noopener noreferrer" class="text-primary underline">dashboard.snaptrade.com</a>
-      step_2: Copia el teu Client ID i Consumer Key des del panell
-      step_3: Introdueix les teves credencials a continuació i fes clic a Desa
-      step_4: Ves a la pàgina de comptes i utilitza 'Connecta un altre broker' per
-        enllaçar els teus comptes d'inversió
-      update_button: Actualitza la configuració
+      oauth_setup_step_1_html: Registra una aplicació OAuth a <a href="https://dashboard.snaptrade.com" target="_blank" rel="noopener noreferrer" class="underline">dashboard.snaptrade.com</a>
+      oauth_setup_step_2_html: 'Només per al flux del navegador: afegeix l''URL de retorn d''aquesta aplicació (<code>%{callback_url}</code>) com a URI de redirecció registrat'
+      oauth_setup_step_3: Defineix SNAPTRADE_OAUTH_CLIENT_ID al teu entorn i reinicia. Només amb això s'activa el flux amb codi de dispositiu; afegeix també SNAPTRADE_OAUTH_CLIENT_SECRET per al flux del navegador
+      oauth_title: OAuth de SnapTrade
+      oauth_status_ready: Autoritza Sure a llegir les dades del teu compte de SnapTrade.
+      oauth_status_ready_device: Autoritza Sure amb un codi de dispositiu per llegir les dades del teu compte de SnapTrade.
+      oauth_status_authorized: Autoritzat amb SnapTrade.
+      oauth_connect_button: Connecta amb SnapTrade
+      oauth_device_button: Utilitza un codi de dispositiu
+      oauth_reauthorize_button: Torna a autoritzar
+      manage_at_snaptrade: Gestiona les connexions a SnapTrade
   snaptrade_item:
     brokerage_summary:
       count:
@@ -108,8 +91,6 @@ ca:
         aquesta connexió i torna-la a crear.
     connections:
       unknown_brokerage: Broker desconegut
-    create:
-      success: SnapTrade s'ha configurat correctament.
     default_name: Connexió SnapTrade
     delete_connection:
       api_deletion_failed: No s'ha pogut eliminar la connexió de SnapTrade — falten
@@ -117,13 +98,8 @@ ca:
       failed: 'No s''ha pogut eliminar la connexió: %{message}'
       missing_authorization_id: Falta l'ID d'autorització
       success: La connexió s'ha eliminat correctament. S'ha alliberat una plaça.
-    delete_orphaned_user:
-      failed: No s'ha pogut eliminar el registre orfe.
-      success: El registre orfe s'ha eliminat correctament.
     destroy:
       success: S'ha programat la connexió SnapTrade per a la seva eliminació.
-    link_accounts:
-      use_setup_flow: Utilitza en el seu lloc el flux de configuració de comptes
     link_existing_account:
       failed: 'No s''ha pogut enllaçar el compte: %{message}'
       not_found: No s'ha trobat el compte.
@@ -180,6 +156,14 @@ ca:
       syncing: Obtenint els teus comptes...
       title: Configura comptes SnapTrade
       try_again: Connecta un broker
+      account_type_label: Tipus de compte
+      account_types:
+        depository: Compte corrent o d'estalvis
+        credit_card: Targeta de crèdit
+        investment: Compte d'inversió
+        crypto: Compte de criptomonedes
+        loan: Préstec o línia de crèdit
+        other_asset: Altre actiu
     snaptrade_item:
       accounts_need_setup:
         one: "%{count} compte necessita configuració"
@@ -205,5 +189,29 @@ ca:
       status: Darrera sincronització fa %{timestamp} - %{summary}
       status_never: Mai sincronitzat
       syncing: Sincronitzant...
-    update:
-      success: La configuració de SnapTrade s'ha actualitzat correctament.
+    oauth_authorize:
+      not_configured: L'autorització de SnapTrade al navegador necessita SNAPTRADE_OAUTH_CLIENT_SECRET a més de SNAPTRADE_OAUTH_CLIENT_ID. Defineix-la i reinicia, o autoritza amb un codi de dispositiu.
+    oauth_callback:
+      success: Autorització de SnapTrade completada.
+      access_denied: S'ha cancel·lat l'autorització de SnapTrade.
+      state_mismatch: L'autorització de SnapTrade no ha superat una comprovació de seguretat. Torna-ho a provar.
+      failed: No s'ha pogut completar l'autorització de SnapTrade. Torna-ho a provar.
+    oauth_device_flow:
+      title: Connecta SnapTrade
+      subtitle: Autoritza Sure a accedir a SnapTrade amb un codi de dispositiu.
+      instructions: Obre SnapTrade, confirma aquest codi de dispositiu i torna aquí per acabar.
+      code_label: Codi de dispositiu
+      open_snaptrade: Obre SnapTrade
+      start_button: Inicia l'autorització
+      complete_button: He autoritzat SnapTrade
+      cancel_button: Cancel·la
+      missing_client_id: L'OAuth de SnapTrade no està configurat. Afegeix SNAPTRADE_OAUTH_CLIENT_ID a .env.local, reinicia l'aplicació i torna-ho a provar.
+    start_oauth_device_flow:
+      failed: No s'ha pogut iniciar l'autorització de dispositiu de SnapTrade. Torna-ho a provar.
+    complete_oauth_device_flow:
+      success: Autorització de SnapTrade completada.
+      device_code_required: No hi ha cap autorització de dispositiu de SnapTrade en curs per a aquesta connexió. Torna-la a iniciar per obtenir un codi nou.
+      authorization_pending: SnapTrade encara no ha rebut la teva confirmació. Aprova el codi a SnapTrade i torna-ho a provar.
+      expired: Aquest codi de dispositiu ha caducat. Torna a iniciar l'autorització.
+      access_denied: S'ha denegat l'autorització de SnapTrade.
+      failed: No s'ha pogut completar l'autorització de dispositiu de SnapTrade. Torna-ho a provar.

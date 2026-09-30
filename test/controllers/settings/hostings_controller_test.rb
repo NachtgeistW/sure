@@ -10,8 +10,10 @@ class Settings::HostingsControllerTest < ActionDispatch::IntegrationTest
     @provider = mock
     Provider::Registry.stubs(:get_provider).with(:twelve_data).returns(@provider)
 
-    @provider.stubs(:healthy?).returns(true)
+    @provider.stubs(:health_status).returns(:healthy)
     Provider::Registry.stubs(:get_provider).with(:yahoo_finance).returns(@provider)
+    Provider::Registry.stubs(:get_provider).with(:rentcast).returns(nil)
+    Provider::Registry.stubs(:get_provider).with(:realie).returns(nil)
     @provider.stubs(:usage).returns(provider_success_response(
       OpenStruct.new(
         used: 10,
@@ -25,7 +27,7 @@ class Settings::HostingsControllerTest < ActionDispatch::IntegrationTest
   teardown do
     # These tests persist global Setting.* values; reset them so state can't
     # leak into later (order-dependent) tests.
-    %i[anthropic_access_token anthropic_base_url anthropic_model llm_provider].each do |key|
+    %i[anthropic_access_token anthropic_base_url anthropic_model jev_api_key jev_endpoint jev_model llm_provider twelve_data_api_key openai_access_token openai_request_timeout ai_response_timeout external_assistant_url external_assistant_token external_assistant_model external_assistant_agent_id rentcast_api_key realie_api_key demo_family_refresh_enabled demo_family_refresh_family_id].each do |key|
       Setting.public_send("#{key}=", nil)
     end
   end
@@ -50,10 +52,225 @@ class Settings::HostingsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "renders OpenAI model and timeout guidance in German" do
+    sign_in users(:sure_support_staff)
+
+    with_self_hosting do
+      get settings_hosting_url(locale: :de)
+
+      assert_response :success
+      assert_includes response.body, "Konfiguriertes Modell prüfen"
+      assert_includes response.body, "Tools beziehungsweise Function Calling unterstützt"
+      assert_includes response.body, "Zeitlimits"
+      assert_includes response.body, "Anfragezeitlimit in Sekunden (optional)"
+      assert_includes response.body, "OPENAI_REQUEST_TIMEOUT"
+      assert_includes response.body, "Antwortzeitlimit in Sekunden (optional)"
+      assert_includes response.body, "(1 + ASSISTANT_MAX_TOOL_CALL_ITERATIONS) × Anfragezeitlimit"
+      assert_includes response.body, "AI_RESPONSE_TIMEOUT"
+      refute_includes response.body, "Request Timeout in Seconds"
+    end
+
+    %w[
+      model_function_calling_help
+      model_function_calling_link
+      timeout_heading
+      timeout_description
+      openai_request_timeout_label
+      openai_request_timeout_help
+      ai_response_timeout_label
+      ai_response_timeout_help
+    ].each do |key|
+      assert I18n.exists?("settings.hostings.openai_settings.#{key}", :de, fallback: false)
+    end
+  end
+
+  test "only a super admin can opt in and the selected family must own the demo email" do
+    # The configured demo email is already used by the new_email fixture.
+    demo_email = "disposable-demo@example.com"
+    Rails.application.stubs(:config_for).with(:demo).returns({ email: demo_email })
+
+    with_self_hosting do
+      patch settings_hosting_url, params: { setting: { demo_family_refresh_enabled: "1" } }
+      assert_not Setting.demo_family_refresh_enabled
+
+      sign_in users(:sure_support_staff)
+      patch settings_hosting_url, params: { setting: { demo_family_refresh_enabled: "1" } }
+      assert_response :unprocessable_entity
+      assert_not Setting.demo_family_refresh_enabled
+
+      family = families(:dylan_family)
+      patch settings_hosting_url, params: { setting: { demo_family_refresh_family_id: family.id } }
+      assert_response :unprocessable_entity
+
+      demo_family = Family.create!(name: "Disposable Demo")
+      demo_family.users.create!(first_name: "Demo", last_name: "Owner", email: demo_email, password: "password123", role: :admin)
+      patch settings_hosting_url, params: { setting: { demo_family_refresh_family_id: demo_family.id } }
+      assert_redirected_to settings_hosting_path
+      patch settings_hosting_url, params: { setting: { demo_family_refresh_enabled: "1" } }
+      assert Setting.demo_family_refresh_enabled
+    end
+  end
+
+  test "demo family selection excludes non-admin email owners and cannot be cleared while enabled" do
+    demo_email = "demo-selection@example.com"
+    Rails.application.stubs(:config_for).with(:demo).returns({ email: demo_email })
+    demo_family = Family.create!(name: "Demo Selection")
+    demo_user = demo_family.users.create!(first_name: "Demo", last_name: "Member", email: demo_email, password: "password123", role: :member)
+    sign_in users(:sure_support_staff)
+
+    with_self_hosting do
+      get settings_hosting_url
+      assert_response :success
+      assert_select "option[value='#{demo_family.id}']", count: 0
+
+      patch settings_hosting_url, params: { setting: { demo_family_refresh_family_id: demo_family.id } }
+      assert_response :unprocessable_entity
+      assert_nil Setting.demo_family_refresh_family_id
+
+      demo_user.update!(role: :super_admin)
+      get settings_hosting_url
+      assert_select "option[value='#{demo_family.id}']", count: 0
+      demo_user.update!(role: :admin)
+      other_admin = demo_family.users.create!(first_name: "Instance", last_name: "Admin", email: "instance-admin@example.com", password: "password123", role: :super_admin)
+      get settings_hosting_url
+      assert_select "option[value='#{demo_family.id}']", count: 0
+      other_admin.update!(role: :member)
+      get settings_hosting_url
+      assert_select "option[value='#{demo_family.id}']", count: 1
+      patch settings_hosting_url, params: { setting: { demo_family_refresh_family_id: demo_family.id } }
+      assert_redirected_to settings_hosting_path
+      patch settings_hosting_url, params: { setting: { demo_family_refresh_enabled: "1" } }
+      assert Setting.demo_family_refresh_enabled
+
+      patch settings_hosting_url, params: { setting: { demo_family_refresh_family_id: "" } }
+      assert_response :unprocessable_entity
+      assert_equal demo_family.id.to_s, Setting.demo_family_refresh_family_id
+      assert Setting.demo_family_refresh_enabled
+
+      patch settings_hosting_url, params: { setting: { demo_family_refresh_family_id: "", demo_family_refresh_enabled: "0" } }
+      assert_redirected_to settings_hosting_path
+      assert_nil Setting.demo_family_refresh_family_id
+      assert_not Setting.demo_family_refresh_enabled
+    end
+  end
+
+  test "can update rentcast api key when self hosting is enabled" do
+    with_self_hosting do
+      patch settings_hosting_url, params: { setting: { rentcast_api_key: "rentcast-token" } }
+
+      assert_equal "rentcast-token", Setting.rentcast_api_key
+    end
+  end
+
+  test "can update realie api key when self hosting is enabled" do
+    with_self_hosting do
+      patch settings_hosting_url, params: { setting: { realie_api_key: "realie-token" } }
+
+      assert_equal "realie-token", Setting.realie_api_key
+    end
+  end
+
+  test "shows Yahoo Finance rate limiting as a warning" do
+    @provider.stubs(:health_status).returns(:rate_limited)
+
+    with_env_overrides("EXCHANGE_RATE_PROVIDER" => "yahoo_finance") do
+      with_self_hosting do
+        get settings_hosting_url
+
+        assert_response :success
+        assert_select "div[class~=?]", "bg-warning/10"
+        assert_includes response.body, "Yahoo Finance is temporarily rate limiting requests."
+        assert_includes response.body, "Yahoo Finance rate limit reached."
+        assert_includes response.body, "No action is required."
+        assert_not_includes response.body, "firewall"
+      end
+    end
+  end
+
+  test "renders healthy unavailable and unknown Yahoo Finance states" do
+    @provider.stubs(:health_status).returns(:healthy, :unavailable, :unknown)
+
+    with_env_overrides("EXCHANGE_RATE_PROVIDER" => "yahoo_finance") do
+      with_self_hosting do
+        get settings_hosting_url
+        assert_includes response.body, "Yahoo Finance is active and working."
+        assert_select "div[class~=?]", "bg-success"
+
+        get settings_hosting_url
+        assert_includes response.body, "Yahoo Finance is currently unavailable."
+        assert_includes response.body, "Could not verify Yahoo Finance."
+        assert_includes response.body, "Check your internet connection and try again later."
+        assert_not_includes response.body, "firewall"
+        assert_select "div[class~=?]", "bg-destructive"
+
+        get settings_hosting_url
+        assert_includes response.body, "Yahoo Finance status is being checked."
+        assert_not_includes response.body, "Could not verify Yahoo Finance."
+        assert_not_includes response.body, "Yahoo Finance rate limit reached."
+        assert_select "div[class~=?]", "bg-surface-inset"
+      end
+    end
+  end
+
+  test "renders Spanish Yahoo Finance health guidance" do
+    @provider.stubs(:health_status).returns(:rate_limited, :unavailable, :unknown)
+
+    with_env_overrides("EXCHANGE_RATE_PROVIDER" => "yahoo_finance") do
+      with_self_hosting do
+        get settings_hosting_url(locale: :es)
+        assert_includes response.body, "Yahoo Finance está limitando temporalmente las solicitudes."
+        assert_includes response.body, "No es necesario realizar ninguna acción."
+
+        get settings_hosting_url(locale: :es)
+        assert_includes response.body, "Yahoo Finance no está disponible en este momento."
+        assert_includes response.body, "Comprueba tu conexión a internet"
+
+        get settings_hosting_url(locale: :es)
+        assert_includes response.body, "Se está comprobando el estado de Yahoo Finance."
+      end
+    end
+  end
+
+  # Italian translates part of yahoo_finance_settings but not the rate-limited
+  # strings this path renders (status_rate_limited, rate_limited_title,
+  # rate_limited_message), which is what makes it exercise the fallback. Move to
+  # another such locale if it gains them, rather than dropping the coverage.
+  test "falls back to English for untranslated Yahoo Finance health guidance" do
+    @provider.stubs(:health_status).returns(:rate_limited)
+
+    with_env_overrides("EXCHANGE_RATE_PROVIDER" => "yahoo_finance") do
+      with_self_hosting do
+        get settings_hosting_url(locale: :it)
+
+        assert_includes response.body, "Yahoo Finance is temporarily rate limiting requests."
+        assert_not_includes response.body, "translation missing"
+      end
+    end
+  end
+
   test "can update settings when self hosting is enabled" do
     with_self_hosting do
       patch settings_hosting_url, params: { setting: { twelve_data_api_key: "1234567890" } }
 
+      assert_equal "1234567890", Setting.twelve_data_api_key
+    end
+  end
+
+  test "can clear an encrypted api key by submitting a blank value" do
+    with_self_hosting do
+      patch settings_hosting_url, params: { setting: { twelve_data_api_key: "1234567890" } }
+      assert_equal "1234567890", Setting.twelve_data_api_key
+
+      patch settings_hosting_url, params: { setting: { twelve_data_api_key: "" } }
+      assert_nil Setting.twelve_data_api_key
+    end
+  end
+
+  test "submitting the masked placeholder leaves an encrypted api key unchanged" do
+    with_self_hosting do
+      patch settings_hosting_url, params: { setting: { twelve_data_api_key: "1234567890" } }
+
+      patch settings_hosting_url, params: { setting: { twelve_data_api_key: "********" } }
       assert_equal "1234567890", Setting.twelve_data_api_key
     end
   end
@@ -82,11 +299,45 @@ class Settings::HostingsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # Regression: issue #2465 symptom for the OpenAI token. Blanking the field
+  # (the form auto-submits on blur) must clear the stored value, not silently
+  # keep the old one.
+  test "can clear openai access token by submitting a blank value" do
+    with_self_hosting do
+      Setting.openai_access_token = "previous-token"
+
+      patch settings_hosting_url, params: { setting: { openai_access_token: "" } }
+
+      assert_nil Setting.openai_access_token
+    end
+  end
+
+  test "ignores redacted openai token placeholder" do
+    with_self_hosting do
+      Setting.openai_access_token = "previous-token"
+
+      patch settings_hosting_url, params: { setting: { openai_access_token: "********" } }
+
+      assert_equal "previous-token", Setting.openai_access_token
+    end
+  end
+
   test "can update anthropic access token when self hosting is enabled" do
     with_self_hosting do
       patch settings_hosting_url, params: { setting: { anthropic_access_token: "fake-anthropic-key-for-tests" } }
 
       assert_equal "fake-anthropic-key-for-tests", Setting.anthropic_access_token
+    end
+  end
+
+  # Regression: issue #2465 symptom for the Anthropic token.
+  test "can clear anthropic access token by submitting a blank value" do
+    with_self_hosting do
+      Setting.anthropic_access_token = "previous-token"
+
+      patch settings_hosting_url, params: { setting: { anthropic_access_token: "" } }
+
+      assert_nil Setting.anthropic_access_token
     end
   end
 
@@ -141,6 +392,133 @@ class Settings::HostingsControllerTest < ActionDispatch::IntegrationTest
       assert_response :unprocessable_entity
       assert_match(/Anthropic Model is required/, flash[:alert])
       assert_nil Setting.anthropic_base_url
+    end
+  end
+
+  test "can update categorization tuning when opted into preview features" do
+    with_self_hosting do
+      enable_preview_features!
+
+      patch settings_hosting_url, params: {
+        family: { categorization_confidence_threshold: "0.7", categorization_shadow_rate: "0.25" }
+      }
+
+      @user.family.reload
+      assert_in_delta 0.7, @user.family.categorization_confidence_threshold, 0.001
+      assert_in_delta 0.25, @user.family.categorization_shadow_rate, 0.001
+    end
+  end
+
+  test "rejects a categorization threshold outside 0 and 1" do
+    with_self_hosting do
+      enable_preview_features!
+      # Compare against what was actually stored rather than a literal, so this
+      # keeps testing "rejection leaves the value alone" if the default moves.
+      before = @user.family.categorization_confidence_threshold
+
+      patch settings_hosting_url, params: {
+        family: { categorization_confidence_threshold: "1.5" }
+      }
+
+      assert_response :unprocessable_entity
+      assert_match(/between 0 and 1/, flash[:alert])
+      assert_in_delta before, @user.family.reload.categorization_confidence_threshold, 0.001
+    end
+  end
+
+  test "rejects a non-numeric categorization shadow rate" do
+    with_self_hosting do
+      enable_preview_features!
+
+      patch settings_hosting_url, params: { family: { categorization_shadow_rate: "lots" } }
+
+      assert_response :unprocessable_entity
+      assert_in_delta 0.0, @user.family.reload.categorization_shadow_rate, 0.001
+    end
+  end
+
+  test "ignores categorization tuning from a user without preview features" do
+    with_self_hosting do
+      family = users(:family_admin).family
+      assert_not family.preview_features_enabled?
+
+      patch settings_hosting_url, params: { family: { categorization_shadow_rate: "0.5" } }
+
+      assert_in_delta 0.0, family.reload.categorization_shadow_rate, 0.001
+    end
+  end
+
+  test "can update jev api key when self hosting is enabled" do
+    with_self_hosting do
+      patch settings_hosting_url, params: { setting: { jev_api_key: "fake-jev-key-for-tests" } }
+
+      assert_equal "fake-jev-key-for-tests", Setting.jev_api_key
+    end
+  end
+
+  test "ignores redacted jev api key placeholder" do
+    with_self_hosting do
+      Setting.jev_api_key = "previous-key"
+
+      patch settings_hosting_url, params: { setting: { jev_api_key: "********" } }
+
+      assert_equal "previous-key", Setting.jev_api_key
+    end
+  end
+
+  test "can clear jev api key by submitting a blank value" do
+    with_self_hosting do
+      Setting.jev_api_key = "previous-key"
+
+      patch settings_hosting_url, params: { setting: { jev_api_key: "" } }
+
+      assert_nil Setting.jev_api_key
+    end
+  end
+
+  test "can update jev endpoint and model" do
+    with_self_hosting do
+      patch settings_hosting_url, params: { setting: { jev_endpoint: "https://api.typesafe.ai/v1/systemone", jev_model: "jev-latest" } }
+
+      assert_equal "https://api.typesafe.ai/v1/systemone", Setting.jev_endpoint
+      assert_equal "jev-latest", Setting.jev_model
+    end
+  end
+
+  test "rejects non-URL jev endpoint" do
+    with_self_hosting do
+      Setting.jev_endpoint = nil
+
+      patch settings_hosting_url, params: { setting: { jev_endpoint: "not-a-url" } }
+
+      assert_response :unprocessable_entity
+      assert_match(/Jev Endpoint must be an http/, flash[:alert])
+      assert_nil Setting.jev_endpoint
+    end
+  end
+
+  test "rejects a plaintext jev endpoint but allows loopback" do
+    with_self_hosting do
+      Setting.jev_endpoint = nil
+
+      patch settings_hosting_url, params: { setting: { jev_endpoint: "http://api.typesafe.ai/v1/systemone" } }
+
+      assert_response :unprocessable_entity
+      assert_nil Setting.jev_endpoint
+
+      patch settings_hosting_url, params: { setting: { jev_endpoint: "http://localhost:4000/v1/systemone" } }
+
+      assert_equal "http://localhost:4000/v1/systemone", Setting.jev_endpoint
+    end
+  end
+
+  test "clears jev endpoint when blank value submitted" do
+    with_self_hosting do
+      Setting.jev_endpoint = "https://api.typesafe.ai/v1/systemone"
+
+      patch settings_hosting_url, params: { setting: { jev_endpoint: "" } }
+
+      assert_nil Setting.jev_endpoint
     end
   end
 
@@ -324,21 +702,186 @@ class Settings::HostingsControllerTest < ActionDispatch::IntegrationTest
 
   test "can update external assistant settings" do
     with_self_hosting do
+      Assistant::External::ModelCatalog.any_instance.stubs(:models).returns([
+        { id: "openclaw/finance-bot", label: "finance-bot (openclaw/finance-bot)" }
+      ])
       patch settings_hosting_url, params: { setting: {
-        external_assistant_url: "https://agent.example.com/v1/chat",
+        external_assistant_url: "https://agent.example.com/v1/chat/completions",
         external_assistant_token: "my-secret-token",
-        external_assistant_agent_id: "finance-bot"
+        external_assistant_model: "openclaw/finance-bot"
       } }
 
       assert_redirected_to settings_hosting_url
-      assert_equal "https://agent.example.com/v1/chat", Setting.external_assistant_url
+      assert_equal "https://agent.example.com/v1/chat/completions", Setting.external_assistant_url
       assert_equal "my-secret-token", Setting.external_assistant_token
-      assert_equal "finance-bot", Setting.external_assistant_agent_id
+      assert_equal "openclaw/finance-bot", Setting.external_assistant_model
     end
   ensure
     Setting.external_assistant_url = nil
     Setting.external_assistant_token = nil
+    Setting.external_assistant_model = nil
+  end
+
+  test "external assistant panel is hidden for builtin and shown for external" do
+    with_self_hosting do
+      get settings_hosting_url
+      assert_response :success
+      assert_select "[data-testid='external-assistant-info']", count: 0
+
+      users(:family_admin).family.update!(assistant_type: "external")
+      Assistant::External::ModelCatalog.any_instance.stubs(:models).returns([])
+
+      get settings_hosting_url
+      assert_response :success
+      assert_select "[data-testid='external-assistant-info']", count: 1
+    end
+  end
+
+  test "external agent dropdown uses discovered model ids" do
+    with_self_hosting do
+      users(:family_admin).family.update!(assistant_type: "external")
+      Setting.external_assistant_url = "https://agent.example.com/v1/chat/completions"
+      Setting.external_assistant_token = "secret"
+      Setting.external_assistant_model = "openclaw/research"
+      Assistant::External::ModelCatalog.any_instance.stubs(:models).returns([
+        { id: "openclaw/main", label: "main (openclaw/main)" },
+        { id: "openclaw/research", label: "research (openclaw/research)" }
+      ])
+
+      get settings_hosting_url
+
+      assert_response :success
+      assert_select "select[name='setting[external_assistant_model]'][aria-required='true']" do
+        assert_select "option[value='']", count: 0
+        assert_select "option[value='openclaw/main']", text: /main/
+        assert_select "option[selected][value='openclaw/research']", text: /research/
+      end
+    end
+  ensure
+    Setting.external_assistant_url = nil
+    Setting.external_assistant_token = nil
+    Setting.external_assistant_model = nil
+  end
+
+  test "rejects an external agent not returned by discovery" do
+    with_self_hosting do
+      Setting.external_assistant_url = "https://agent.example.com/v1/chat/completions"
+      Setting.external_assistant_token = "secret"
+      Assistant::External::ModelCatalog.any_instance.stubs(:models).returns([
+        { id: "openclaw/main", label: "main (openclaw/main)" }
+      ])
+
+      patch settings_hosting_url, params: { setting: { external_assistant_model: "openclaw/missing" } }
+
+      assert_response :unprocessable_entity
+      assert_nil Setting.external_assistant_model
+      assert_equal "Select an agent returned by the configured endpoint.", flash[:alert]
+    end
+  end
+
+  test "validation error page keeps the discovered agent options" do
+    with_self_hosting do
+      with_env_overrides("EXTERNAL_ASSISTANT_URL" => nil, "EXTERNAL_ASSISTANT_TOKEN" => nil, "EXTERNAL_ASSISTANT_MODEL" => nil) do
+        users(:family_admin).family.update!(assistant_type: "external")
+        Setting.external_assistant_url = "https://agent.example.com/v1/chat/completions"
+        Setting.external_assistant_token = "secret"
+        Setting.external_assistant_model = "openclaw/main"
+        Assistant::External::ModelCatalog.any_instance.stubs(:models).returns([
+          { id: "openclaw/main", label: "main (openclaw/main)" },
+          { id: "openclaw/research", label: "research (openclaw/research)" }
+        ])
+
+        patch settings_hosting_url, params: { setting: { external_assistant_model: "openclaw/missing" } }
+
+        assert_response :unprocessable_entity
+        assert_select "select[name='setting[external_assistant_model]']:not([disabled])" do
+          assert_select "option[selected][value='openclaw/main']"
+          assert_select "option[value='openclaw/research']"
+        end
+      end
+    end
+  ensure
+    Setting.external_assistant_url = nil
+    Setting.external_assistant_token = nil
+    Setting.external_assistant_model = nil
+  end
+
+  test "rejected external assistant changes leave stored settings untouched" do
+    with_self_hosting do
+      with_env_overrides("EXTERNAL_ASSISTANT_URL" => nil, "EXTERNAL_ASSISTANT_TOKEN" => nil, "EXTERNAL_ASSISTANT_MODEL" => nil) do
+        Setting.external_assistant_url = "https://old.example.com/v1/chat/completions"
+        Setting.external_assistant_token = "old-secret"
+        Setting.external_assistant_model = "openclaw/main"
+        Assistant::External::ModelCatalog.any_instance.stubs(:models)
+          .raises(Assistant::External::ModelCatalog::Error, "Agent discovery returned HTTP 401.")
+
+        patch settings_hosting_url, params: { setting: {
+          external_assistant_url: "https://new.example.com/v1/chat/completions",
+          external_assistant_token: "new-secret",
+          external_assistant_model: "openclaw/main"
+        } }
+
+        assert_response :unprocessable_entity
+        assert_equal "https://old.example.com/v1/chat/completions", Setting.external_assistant_url
+        assert_equal "old-secret", Setting.external_assistant_token
+        assert_equal "openclaw/main", Setting.external_assistant_model
+      end
+    end
+  ensure
+    Setting.external_assistant_url = nil
+    Setting.external_assistant_token = nil
+    Setting.external_assistant_model = nil
+  end
+
+  test "changing the endpoint clears an agent the new endpoint does not offer" do
+    with_self_hosting do
+      with_env_overrides("EXTERNAL_ASSISTANT_URL" => nil, "EXTERNAL_ASSISTANT_TOKEN" => nil, "EXTERNAL_ASSISTANT_MODEL" => nil) do
+        Setting.external_assistant_url = "https://old.example.com/v1/chat/completions"
+        Setting.external_assistant_token = "secret"
+        Setting.external_assistant_model = "openclaw/research"
+        Setting.external_assistant_agent_id = "research"
+        Assistant::External::ModelCatalog.any_instance.stubs(:models).returns([
+          { id: "openclaw/main", label: "main (openclaw/main)" }
+        ])
+
+        patch settings_hosting_url, params: { setting: {
+          external_assistant_url: "https://new.example.com/v1/chat/completions",
+          external_assistant_token: "********",
+          external_assistant_model: "openclaw/research"
+        } }
+
+        assert_redirected_to settings_hosting_url
+        assert_equal I18n.t("settings.hostings.assistant_settings.external_agent_reselect"), flash[:alert]
+        assert_equal "https://new.example.com/v1/chat/completions", Setting.external_assistant_url
+        assert_equal "secret", Setting.external_assistant_token
+        assert_nil Setting.external_assistant_model
+        assert_nil Setting.external_assistant_agent_id
+      end
+    end
+  ensure
+    Setting.external_assistant_url = nil
+    Setting.external_assistant_token = nil
+    Setting.external_assistant_model = nil
     Setting.external_assistant_agent_id = nil
+  end
+
+  test "settings page shows a discovery error instead of failing on TLS errors" do
+    with_self_hosting do
+      with_env_overrides("EXTERNAL_ASSISTANT_URL" => nil, "EXTERNAL_ASSISTANT_TOKEN" => nil, "EXTERNAL_ASSISTANT_MODEL" => nil) do
+        users(:family_admin).family.update!(assistant_type: "external")
+        Setting.external_assistant_url = "https://agent.example.com/v1/chat/completions"
+        Setting.external_assistant_token = "secret"
+        stub_request(:get, "https://agent.example.com/v1/models").to_raise(OpenSSL::SSL::SSLError)
+
+        get settings_hosting_url
+
+        assert_response :success
+        assert_select "p.text-destructive", text: /Could not load agents/
+      end
+    end
+  ensure
+    Setting.external_assistant_url = nil
+    Setting.external_assistant_token = nil
   end
 
   test "does not overwrite token with masked placeholder" do
@@ -348,6 +891,19 @@ class Settings::HostingsControllerTest < ActionDispatch::IntegrationTest
       patch settings_hosting_url, params: { setting: { external_assistant_token: "********" } }
 
       assert_equal "real-secret", Setting.external_assistant_token
+    end
+  ensure
+    Setting.external_assistant_token = nil
+  end
+
+  # Regression: issue #2465 symptom for the external assistant token.
+  test "can clear external assistant token by submitting a blank value" do
+    with_self_hosting do
+      Setting.external_assistant_token = "real-secret"
+
+      patch settings_hosting_url, params: { setting: { external_assistant_token: "" } }
+
+      assert_nil Setting.external_assistant_token
     end
   ensure
     Setting.external_assistant_token = nil
@@ -374,7 +930,7 @@ class Settings::HostingsControllerTest < ActionDispatch::IntegrationTest
   ensure
     Setting.external_assistant_url = nil
     Setting.external_assistant_token = nil
-    Setting.external_assistant_agent_id = nil
+    Setting.external_assistant_model = nil
   end
 
   test "disconnect external assistant requires admin" do
@@ -392,28 +948,38 @@ class Settings::HostingsControllerTest < ActionDispatch::IntegrationTest
       patch settings_hosting_url, params: { setting: {
         llm_context_window: "4096",
         llm_max_response_tokens: "1024",
-        llm_max_items_per_call: "40"
+        llm_max_items_per_call: "40",
+        openai_request_timeout: "180",
+        ai_response_timeout: "240"
       } }
 
       assert_redirected_to settings_hosting_url
       assert_equal 4096, Setting.llm_context_window
       assert_equal 1024, Setting.llm_max_response_tokens
       assert_equal 40, Setting.llm_max_items_per_call
+      assert_equal 180, Setting.openai_request_timeout
+      assert_equal 240, Setting.ai_response_timeout
 
       patch settings_hosting_url, params: { setting: {
         llm_context_window: "",
         llm_max_response_tokens: "",
-        llm_max_items_per_call: ""
+        llm_max_items_per_call: "",
+        openai_request_timeout: "",
+        ai_response_timeout: ""
       } }
 
       assert_nil Setting.llm_context_window
       assert_nil Setting.llm_max_response_tokens
       assert_nil Setting.llm_max_items_per_call
+      assert_nil Setting.openai_request_timeout
+      assert_nil Setting.ai_response_timeout
     end
   ensure
     Setting.llm_context_window = nil
     Setting.llm_max_response_tokens = nil
     Setting.llm_max_items_per_call = nil
+    Setting.openai_request_timeout = nil
+    Setting.ai_response_timeout = nil
   end
 
   test "rejects llm budget below field minimum" do
@@ -435,11 +1001,33 @@ class Settings::HostingsControllerTest < ActionDispatch::IntegrationTest
       assert_response :unprocessable_entity
       assert_match(/must be a whole number/, flash[:alert])
       assert_nil Setting.llm_max_items_per_call
+
+      patch settings_hosting_url, params: { setting: { openai_request_timeout: "0" } }
+
+      assert_response :unprocessable_entity
+      assert_match(/must be a whole number/, flash[:alert])
+      assert_nil Setting.openai_request_timeout
     end
   ensure
     Setting.llm_context_window = nil
     Setting.llm_max_response_tokens = nil
     Setting.llm_max_items_per_call = nil
+    Setting.openai_request_timeout = nil
+  end
+
+  test "shows environment backed OpenAI request timeout when field is disabled" do
+    with_self_hosting do
+      Setting.openai_request_timeout = 180
+
+      with_env_overrides("OPENAI_REQUEST_TIMEOUT" => "300") do
+        get settings_hosting_url
+
+        assert_response :success
+        assert_select "input[name='setting[openai_request_timeout]'][value='300'][disabled='disabled']"
+      end
+    end
+  ensure
+    Setting.openai_request_timeout = nil
   end
 
   test "can clear data only when admin" do
@@ -521,4 +1109,98 @@ class Settings::HostingsControllerTest < ActionDispatch::IntegrationTest
   ensure
     Setting.securities_providers = ""
   end
+
+  test "unchecking every securities provider does not re-enable twelve_data via the legacy fallback" do
+    with_self_hosting do
+      # Start from the out-of-the-box default (only twelve_data enabled)
+      assert_equal [ "twelve_data" ], Setting.enabled_securities_providers
+
+      patch settings_hosting_url, params: { setting: { securities_providers: [] } }
+
+      assert_redirected_to settings_hosting_url
+      assert_equal [], Setting.enabled_securities_providers
+    end
+  ensure
+    # Explicitly restore the real default value rather than assigning nil —
+    # rails-settings-cached's cache layer doesn't reliably invalidate on
+    # delete within a single test process, so a later test can still read
+    # back the just-deleted blank override instead of falling through to
+    # the field's default.
+    Setting.securities_providers = ""
+    Setting.securities_provider = "twelve_data"
+  end
+
+  # --- T-Invest visibility (issue #3089) ---
+
+  test "hides T-Invest settings when neither tinkoff_invest nor moex_public is enabled" do
+    with_self_hosting do
+      patch settings_hosting_url, params: { setting: { securities_providers: [ "twelve_data" ] } }
+
+      get settings_hosting_url
+
+      assert_response :success
+      # "T-Invest (T-Bank)" also appears as a checkbox label in the always-rendered
+      # securities checklist, so assert on the settings block's own field instead.
+      assert_select "input[name='setting[tinkoff_invest_api_key]']", false
+    end
+  ensure
+    Setting.securities_providers = ""
+  end
+
+  test "shows T-Invest settings when tinkoff_invest is enabled, without the moex-only notice" do
+    with_self_hosting do
+      patch settings_hosting_url, params: { setting: { securities_providers: [ "tinkoff_invest" ] } }
+
+      get settings_hosting_url
+
+      assert_response :success
+      assert_select "input[name='setting[tinkoff_invest_api_key]']"
+      assert_not_includes response.body, I18n.t("settings.hostings.tinkoff_invest_settings.moex_only_notice")
+    end
+  ensure
+    Setting.securities_providers = ""
+  end
+
+  test "shows T-Invest settings with the moex-only notice when moex_public is enabled, even without tinkoff_invest" do
+    with_self_hosting do
+      patch settings_hosting_url, params: { setting: { securities_providers: [ "moex_public" ] } }
+
+      notices = {
+        en: "Not enabled for prices above — T-Invest is used to fetch brand logos for all your securities whenever a token is configured, independent of the checkbox above.",
+        de: "Oben nicht für Kursdaten aktiviert – sobald ein Token eingerichtet ist, ruft T-Invest unabhängig vom obigen Kontrollkästchen Logos für alle deine Wertpapiere ab."
+      }
+      notices.each do |locale, notice|
+        get settings_hosting_url(locale: locale)
+
+        assert_response :success
+        assert_select "input[name='setting[tinkoff_invest_api_key]']"
+        assert_includes response.body, notice
+        assert_equal notice, I18n.t("settings.hostings.tinkoff_invest_settings.moex_only_notice", locale: locale, fallback: false, raise: true)
+      end
+    end
+  ensure
+    Setting.securities_providers = ""
+  end
+
+  test "shows T-Invest settings when a token is already configured, even with neither checkbox enabled" do
+    with_self_hosting do
+      Setting.tinkoff_invest_api_key = "some-token"
+      patch settings_hosting_url, params: { setting: { securities_providers: [ "twelve_data" ] } }
+
+      get settings_hosting_url
+
+      assert_response :success
+      assert_select "input[name='setting[tinkoff_invest_api_key]']"
+      assert_includes response.body, I18n.t("settings.hostings.tinkoff_invest_settings.moex_only_notice")
+    end
+  ensure
+    Setting.securities_providers = ""
+    Setting.tinkoff_invest_api_key = nil
+  end
+
+  private
+    def enable_preview_features!
+      @user = users(:family_admin)
+      @user.update!(preferences: (@user.preferences || {}).merge("preview_features_enabled" => true))
+    end
 end

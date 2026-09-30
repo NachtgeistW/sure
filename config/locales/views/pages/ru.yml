@@ -1,0 +1,162 @@
+---
+ru:
+  pages:
+    changelog:
+      title: Что нового
+    dashboard:
+      cashflow_preview:
+        node_labels:
+          cash_flow: "Денежный поток"
+          surplus: "Профицит"
+          deficit: "Дефицит"
+        title: Новая диаграмма Sankey
+        preview: Предпросмотр
+        preview_tooltip: Эта диаграмма заменит визуализацию выше, так как использует новый общий API с мобильным клиентом на Swift.
+        feedback_prompt: Сравните эту диаграмму с исходной выше и сообщите нам, если она отличается чем-то, кроме сортировки.
+        positive: Всё верно
+        negative: Что-то не так
+        feedback_title: Отзыв о диаграмме денежного потока
+        feedback_loading: Загрузка формы отзыва…
+        feedback_unavailable: Отзыв сейчас недоступен. Попробуйте позже.
+        feedback_thanks: Спасибо, что помогаете улучшить диаграмму!
+        feedback_privacy: Ваш ответ отправляется в PostHog. Опишите проблему, не указывая номера счетов, балансы и другие личные финансовые данные.
+        feedback_submit: Отправить отзыв
+      balance_sheet:
+        add_accounts: Добавьте счета %{name}, чтобы увидеть разбивку
+        add_asset_accounts: Добавьте счета активов
+        add_liability_accounts: Добавьте счета обязательств
+        classifications:
+          asset: Активы
+          liability: Обязательства
+        name: Название
+        no_asset: Пока нет активов
+        no_items: Пока нет %{name}
+        no_liability: Пока нет обязательств
+        title: Баланс
+        value: Сумма
+        weight: Доля
+        expand_all: Развернуть все
+        collapse_all: Свернуть все
+      cashflow_sankey:
+        add_transaction: Добавить операцию
+        no_data_description: Добавьте операции или измените период
+        no_data_title: Нет данных за период
+        title: Денежный поток
+        zoom_out: Показать весь поток
+        loading: Загрузка денежного потока…
+        load_error: Не удалось загрузить денежный поток. Попробуйте ещё раз.
+        retry: Повторить
+      drag_to_reorder: Перетащите для изменения порядка
+      investment_summary:
+        add_investment: Добавьте инвестиционный счёт для отслеживания портфеля
+        contributions: Пополнения
+        holding: Позиция
+        no_investments: Нет инвестиционных счетов
+        period_activity: Активность за %{period}
+        return: Доходность
+        title: Инвестиции
+        total_return: Общая доходность
+        trades: Сделки
+        value: Сумма
+        weight: Доля
+        withdrawals: Выводы
+      net_worth_chart:
+        data_not_available: Нет данных за выбранный период
+        title: Чистая стоимость
+      new: Новое
+      no_account_empty_state:
+        new_account: Новый счёт
+        no_account_subtitle: Добавьте счета, чтобы увидеть данные на панели.
+        no_account_title: Пока нет счетов
+      no_accounts:
+        add_account: Добавить счёт
+        description: Добавьте счета, чтобы увидеть чистую стоимость
+        title: Пока нет счетов
+      outflows_donut:
+        categories: Категории
+        title: Расходы
+        total_outflows: Всего расходов
+        value: Сумма
+        weight: Доля
+      sections_aria_label: Разделы панели
+      subtitle: Вот что происходит с вашими финансами
+      toggle_section: Показать/скрыть раздел
+      welcome: С возвращением, %{name}
+      widget_size:
+        auto: Авто
+        compact: Компактный
+        full: Полный
+        half: Половина
+        height_label: Высота
+        label: Размер
+        tall: Высокий
+        width_label: Ширина
+      insights_feed:
+        title: Инсайты
+      money_flow:
+        title: Доходы / расходы
+        date_range: '%{start_date} – %{end_date}'
+        month_picker_aria_label: Выбрать месяц
+        filter_accounts: Фильтр счетов (%{count})
+        filter_accounts_all: Все счета
+        period_scope_hint: Показывает месяцы, выбранные здесь, — независимо от периода панели вверху.
+        search_accounts: Поиск счетов
+        apply: Применить
+        balance: Сальдо операций
+        chart_span:
+          one: Последний %{count} месяц
+          few: Последние %{count} месяца
+          many: Последние %{count} месяцев
+          other: Последние %{count} месяца
+        income: Доходы
+        expenses: Расходы
+      spending_trend:
+        title: Расходы
+        date_range: '%{start_date} – %{end_date}'
+        date_range_short: '%{start_date} – %{end_day}, %{year}'
+        date_range_short_single: '%{date} %{year}'
+        month_picker_aria_label: Выбрать месяц
+        period_scope_hint: Показывает месяц, выбранный здесь, — независимо от периода панели вверху.
+        no_data: Нет данных о расходах за этот месяц
+        previous_comparison_days: (1–%{end_day})
+    feedback:
+      bug_report: Сообщить об ошибке
+      description: Сообщите нам, если у вас есть замечания. Можно приложить ссылки
+        на видео или скриншоты.
+      discuss: Обсудите %{product} с другими
+      feature_request: Предложить функцию
+      heading: Оставьте отзыв
+      title: Обратная связь
+    intro:
+      coming_soon: Скоро появится
+      description: Мы создаём более продуманный онбординг, чтобы узнать о ваших целях
+        и потребностях. Пока перейдите в чат с Sure и расскажите о своей финансовой
+        ситуации.
+      not_authorized: Раздел доступен только для гостей.
+      start_chatting: Начать чат
+      welcome: Добро пожаловать!
+    privacy:
+      heading: Политика конфиденциальности
+      placeholder: Здесь будет текст политики конфиденциальности.
+      title: Политика конфиденциальности
+    redis_configuration_error:
+      heading: Требуется настройка Redis
+      page_title: Требуется настройка Redis — Sure
+      refresh_hint: После настройки Redis обновите страницу.
+      refresh_page: Обновить
+      setup_guide_hint: Следуйте руководству по настройке Docker для конфигурации
+        Redis
+      subheading: Для self-hosted версии Sure необходимо настроить Redis.
+      view_setup_guide: Открыть руководство
+      why_required_body: Sure использует Redis для фоновых задач Sidekiq — синхронизации
+        счетов, обработки импорта и других операций, поддерживающих актуальность данных.
+      why_required_title: Зачем нужен Redis?
+    release_notes_unavailable:
+      body_html: "<p>Не удалось получить последние заметки о выпуске. Пожалуйста,
+        попробуйте позже или посетите <a href='https://github.com/we-promise/sure/releases'
+        target='_blank' rel='noopener noreferrer'>страницу релизов на GitHub</a>.</p>"
+      name: Заметки о выпуске недоступны
+    terms:
+      heading: Условия использования
+      placeholder: Здесь будет текст условий использования.
+      title: Условия использования

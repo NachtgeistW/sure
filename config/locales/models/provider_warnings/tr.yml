@@ -1,4 +1,14 @@
 ---
 tr:
   provider_warnings:
-    limited_investment_data: "Bu sağlayıcıdan alınan yatırım verileri sınırlıdır. İşlem etiketleri (Al, Sat, Temettü) mevcut olmadığından bütçe doğruluğu etkilenebilir. Yatırım işlemlerini hariç tutmak veya kategorize etmek için kurallar oluşturmayı düşünün."
+    limited_investment_data: Bu sağlayıcıdan alınan yatırım verileri sınırlıdır. İşlem
+      etiketleri (Al, Sat, Temettü) mevcut olmadığından bütçe doğruluğu etkilenebilir.
+      Yatırım işlemlerini hariç tutmak veya kategorize etmek için kurallar oluşturmayı
+      düşünün.
+    lunchflow_accounts_failed:
+      one: 'Lunchflow içe aktarma: %{count} hesap güncellenemedi'
+      other: 'Lunchflow içe aktarma: %{count} hesap güncellenemedi'
+    lunchflow_transactions_failed:
+      one: 'Lunchflow içe aktarma: %{count} hesabın işlemleri alınamadı'
+      other: 'Lunchflow içe aktarma: %{count} hesabın işlemleri alınamadı'
+    lunchflow_import_error: 'Lunchflow içe aktarma: %{error}'
