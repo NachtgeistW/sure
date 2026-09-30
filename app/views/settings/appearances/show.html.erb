@@ -92,6 +92,11 @@
             <span class="text-sm text-primary"><%= t(".color_convention_#{convention}") %></span>
           <% end %>
         <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
 <%= settings_section title: t(".modals_title"), subtitle: t(".modals_subtitle") do %>
   <div>
     <%= form_with url: settings_appearance_path, method: :patch,

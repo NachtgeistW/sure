@@ -241,4 +241,5 @@ class Provider::Registry
         %i[plaid_us plaid_eu github openai anthropic]
       end
     end
+  end
 end
