@@ -6,6 +6,47 @@ class Demo::GeneratorTest < ActiveSupport::TestCase
     @admin_user = create_user!(@family, "demo-admin@example.com")
   end
 
+  %i[generate_default_data! generate_empty_data! generate_new_user_data!].each do |mode|
+    test "#{mode} enables AI and preview features for both demo users without a provider" do
+      User.find_by!(email: "user@example.com").update!(email: "existing-user@example.com")
+      User.any_instance.stubs(:ai_available?).returns(false)
+      generator = Demo::Generator.new(seed: 42)
+      %i[create_realistic_categories! create_realistic_accounts! create_realistic_transactions!
+         generate_budget_auto_fill! generate_goals! create_monitoring_api_key!].each do |step|
+        generator.stubs(step)
+      end
+
+      generator.public_send(mode, skip_clear: true)
+
+      family = User.find_by!(email: "user@example.com").family
+      assert_equal %w[admin member], family.users.order(:role).pluck(:role)
+      family.users.each do |user|
+        assert user.ai_enabled, "#{user.role} should have AI enabled"
+        assert user.show_ai_sidebar?, "#{user.role} should start with the AI sidebar open"
+        assert user.preview_features_enabled?, "#{user.role} should have preview access"
+      end
+    end
+  end
+
+  test "default demo data links the public on-chain wallets without reading a chain" do
+    # WebMock refuses any request, so this also proves generation stays offline.
+    User.find_by!(email: "user@example.com").update!(email: "existing-user@example.com")
+    generator = Demo::Generator.new(seed: 42)
+    %i[create_realistic_categories! create_realistic_accounts! create_realistic_transactions!
+       generate_budget_auto_fill! generate_goals! create_monitoring_api_key!].each do |step|
+      generator.stubs(step)
+    end
+
+    generator.generate_default_data!(skip_clear: true)
+
+    item = User.find_by!(email: "user@example.com").family.onchain_wallet_item
+    expected = Demo::Generator::ONCHAIN_DEMO_WALLETS.map { |wallet| [ wallet[:chain], Onchain::Chains.canonical_address(wallet[:chain], wallet[:address]) ] }
+    assert_equal expected.sort, item.wallet_keys.sort
+    assert_equal %w[BTC ETH SOL USDC USDC USDT USDT], item.onchain_wallet_accounts.pluck(:symbol).sort
+    assert item.onchain_wallet_accounts.all? { |row| row.account&.accountable_type == "Crypto" }
+    assert_equal 1, item.syncs.count, "the item sync fills in the real balances"
+  end
+
   test "production sample reset includes Wallet in the normal accounts and transactions phases" do
     Rails.stubs(:env).returns(ActiveSupport::EnvironmentInquirer.new("production"))
     generator = Demo::Generator.new(seed: 42)
@@ -27,6 +68,28 @@ class Demo::GeneratorTest < ActiveSupport::TestCase
     generator.generate_default_data!(skip_clear: true)
 
     assert_wallet_demo_activity
+  end
+
+  test "sample data generates loan payments before its transaction commits" do
+    generator = Demo::Generator.new(seed: 42)
+    stub_non_loan_activity(generator)
+    @family.expects(:sync_later)
+
+    generator.generate_new_user_data_for!(@family, email: @admin_user.email)
+
+    assert_demo_loan_payments
+  end
+
+  test "default demo generates loan payments inside a refresh transaction" do
+    generator = Demo::Generator.new(seed: 42)
+    generator.stubs(:create_family_and_users!).returns(@family)
+    generator.stubs(:create_monitoring_api_key!)
+    stub_non_loan_activity(generator)
+
+    ActiveRecord::Base.transaction do
+      generator.generate_default_data!(skip_clear: true, email: @admin_user.email)
+      assert_demo_loan_payments
+    end
   end
 
   test "monitoring api key creation reassigns stale demo monitoring key owned by another user" do
@@ -175,6 +238,39 @@ class Demo::GeneratorTest < ActiveSupport::TestCase
   end
 
   private
+    # Keep the actual loan terms, opening valuations and payment generation in
+    # the public orchestration. Unrelated history and provider syncs are omitted
+    # so this regression tests the transaction boundary without external calls.
+    def stub_non_loan_activity(generator)
+      %i[load_securities! generate_salary_history! generate_housing_transactions!
+         generate_food_transactions! generate_transportation_transactions!
+         generate_entertainment_transactions! generate_shopping_transactions!
+         generate_healthcare_transactions! generate_travel_transactions!
+         generate_personal_care_transactions! generate_investment_transactions!
+         generate_transfers_and_payments! generate_regular_expenses!
+         generate_legacy_transactions! generate_crypto_and_misc_assets!
+         generate_budget_auto_fill! generate_goals! sync_family_accounts!].each do |step|
+        generator.stubs(step)
+      end
+      Demo::FinancekitGenerator.any_instance.stubs(:create_accounts!)
+      Demo::FinancekitGenerator.any_instance.stubs(:create_transactions!)
+    end
+
+    def assert_demo_loan_payments
+      {
+        "Home Mortgage" => "Mortgage Payment",
+        "Student Loan" => "Student Loan Payment",
+        "Car Loan" => "Auto Loan Payment"
+      }.each do |name, memo|
+        account = @family.accounts.find_by!(name: name)
+        due = account.loan.amortization_schedule.payments.select { |payment| payment.date <= Date.current }
+        assert due.any?, "#{name} should have payments due"
+        payments = account.entries.transactions.where(name: memo)
+        assert_equal due.size, payments.count, "#{name} should record every scheduled payment"
+        assert_equal(-due.sum { |payment| payment.principal.amount }, payments.sum(:amount))
+      end
+    end
+
     # Exercise the actual account/transaction orchestration without generating
     # years of unrelated spending, securities, budgets and goals in each test.
     def stub_non_wallet_activity(generator)

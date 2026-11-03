@@ -6,12 +6,22 @@ import {
   createChartTooltip,
 } from "utils/chart_tooltip";
 
-// The loan balance chart: three series on one axis.
+// The loan balance chart: three series on one axis, and a fourth when the
+// Extra repayments tab has an amount applied.
 //
 //   actual     the recorded balance, origination -> today. Solid: fact.
 //   scheduled  the original contract, origination -> maturity. Dashed.
 //   projected  where today's balance is heading on the contract's repayment.
 //              Dashed.
+//   extra      the projection with the extra amount on top of every
+//              repayment. Dashed, in its own pattern. Absent from the
+//              payload when no extra applies.
+//
+// Under the scheduled line, the area down to zero is split by each repayment's
+// interest and principal SHARE: principal from the bottom, interest above it up
+// to the line. Shares, not amounts: a repayment is a fraction of a percent of
+// the balance, so amounts would be a sliver along the axis. The interest part
+// is hatched as well as tinted, for the same reason the lines are dashed.
 //
 // Series are distinguished by DASH PATTERN as well as colour. Hue alone fails
 // in greyscale and under deuteranopia, and red/green would be the worst
@@ -75,7 +85,14 @@ export default class extends Controller {
     root.innerHTML = "";
     const data = this.dataValue || {};
 
-    const toPoint = (p) => ({ date: parseDate(p.date), balance: p.balance });
+    // `principal`/`interest` are on the scheduled payment points only; the
+    // tooltip checks for them rather than assuming.
+    const toPoint = (p) => ({
+      date: parseDate(p.date),
+      balance: p.balance,
+      principal: p.principal,
+      interest: p.interest,
+    });
 
     const domainStart = parseDate(data.domain_start);
     const domainEnd = parseDate(data.domain_end);
@@ -91,7 +108,10 @@ export default class extends Controller {
     // chart on a theme change by itself; no redraw is needed for that.
     const success = "var(--color-success)";
     const destructive = "var(--color-destructive)";
+    const info = "var(--color-info)";
     const muted = "var(--color-tertiary)";
+    const interestShare = "var(--color-warning)";
+    const principalShare = "var(--color-info)";
 
     // Drawing order: forecasts underneath, fact on top.
     const series = [
@@ -107,6 +127,13 @@ export default class extends Controller {
         points: (data.projected || []).map(toPoint),
         color: success,
         dash: "4 4",
+        width: 2,
+      },
+      {
+        key: "extra",
+        points: (data.extra || []).map(toPoint),
+        color: info,
+        dash: "10 3 2 3",
         width: 2,
       },
       {
@@ -197,10 +224,54 @@ export default class extends Controller {
       .x((d) => x(d.date))
       .y((d) => y(d.balance))
       .curve(d3.curveMonotoneX);
-    const area = d3
+    // The scheduled payments' shares, for the shading. A share is clamped to
+    // 0..1 so a payment that adds to the balance cannot draw outside the area
+    // under the line.
+    const scheduledPoints = series.some((s) => s.key === "scheduled")
+      ? (data.scheduled || []).map(toPoint)
+      : [];
+    const paymentShares = scheduledPoints
+      .filter(
+        (p) =>
+          p.principal != null &&
+          p.interest != null &&
+          p.principal + p.interest > 0,
+      )
+      .map((p) => ({
+        date: p.date,
+        balance: p.balance,
+        principalShare: Math.min(
+          1,
+          Math.max(0, p.principal / (p.principal + p.interest)),
+        ),
+      }));
+    // The opening point is the amount borrowed, not a payment, so it has no
+    // split of its own. It anchors the shading's left end with the first
+    // payment's share, so the area under the line is shaded from origination
+    // and a loan of one repayment still has an interval to shade.
+    const opening = scheduledPoints[0];
+    const shares =
+      opening && opening.principal == null && paymentShares.length > 0
+        ? [
+            {
+              date: opening.date,
+              balance: opening.balance,
+              principalShare: paymentShares[0].principalShare,
+            },
+            ...paymentShares,
+          ]
+        : paymentShares;
+    const principalTop = (d) => y(d.balance * d.principalShare);
+    const principalArea = d3
       .area()
       .x((d) => x(d.date))
-      .y0(height - margin.bottom)
+      .y0(y(0))
+      .y1(principalTop)
+      .curve(d3.curveMonotoneX);
+    const interestArea = d3
+      .area()
+      .x((d) => x(d.date))
+      .y0(principalTop)
       .y1((d) => y(d.balance))
       .curve(d3.curveMonotoneX);
 
@@ -252,6 +323,50 @@ export default class extends Controller {
       )
       .call(styleAxis);
 
+    // The shading draws under every line. The hatch lives in the same defs as
+    // the clips, so its id is as unique as theirs.
+    if (shares.length > 1) {
+      const hatch = `${id}-hatch`;
+      defs
+        .append("pattern")
+        .attr("id", hatch)
+        .attr("patternUnits", "userSpaceOnUse")
+        .attr("width", 6)
+        .attr("height", 6)
+        .attr("patternTransform", "rotate(45)")
+        .append("line")
+        .attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", 0)
+        .attr("y2", 6)
+        .style("stroke", interestShare)
+        .style("stroke-width", 1.5)
+        .style("stroke-opacity", 0.45);
+      svg
+        .append("path")
+        .datum(shares)
+        .attr("d", principalArea)
+        .attr("clip-path", `url(#${plotClip})`)
+        .attr("data-share", "principal")
+        .style("fill", principalShare)
+        .style("fill-opacity", 0.16);
+      svg
+        .append("path")
+        .datum(shares)
+        .attr("d", interestArea)
+        .attr("clip-path", `url(#${plotClip})`)
+        .attr("data-share", "interest")
+        .style("fill", interestShare)
+        .style("fill-opacity", 0.18);
+      svg
+        .append("path")
+        .datum(shares)
+        .attr("d", interestArea)
+        .attr("clip-path", `url(#${plotClip})`)
+        .attr("data-share-hatch", "interest")
+        .style("fill", `url(#${hatch})`);
+    }
+
     const stroke = (path, s, color) =>
       path
         .style("fill", "none")
@@ -263,13 +378,6 @@ export default class extends Controller {
 
     for (const s of series) {
       if (s.key === "actual") {
-        svg
-          .append("path")
-          .datum(s.points)
-          .attr("d", area)
-          .attr("clip-path", `url(#${plotClip})`)
-          .style("fill", s.color)
-          .style("opacity", 0.08);
         // The greyed remainder sits underneath; the coloured line on top is
         // the one that carries data-series, so a test asking for the actual
         // line finds the line that is meant to be seen.
@@ -372,6 +480,22 @@ export default class extends Controller {
       }
     })();
     const money = (value) => formatter.format(value);
+    // The balance reads in whole units; the principal/interest split keeps the
+    // currency's minor units so a small component never rounds to nothing.
+    const splitFormatter = (() => {
+      const digits = data.currency_precision ?? 2;
+      try {
+        return new Intl.NumberFormat(locale, {
+          style: "currency",
+          currency: data.currency || "USD",
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits,
+        });
+      } catch {
+        return formatter;
+      }
+    })();
+    const splitMoney = (value) => splitFormatter.format(value);
 
     const showAt = (date) => {
       const px = x(date);
@@ -381,12 +505,18 @@ export default class extends Controller {
           if (date < s.points[0].date || date > s.points.at(-1).date)
             return null;
           const point = nearest(s.points, date);
-          return point
-            ? {
-                label: data.labels?.[s.key] || s.key,
-                value: money(point.balance),
-              }
-            : null;
+          if (!point) return null;
+          // What the scheduled payment on this date is made of (#3958).
+          const split =
+            point.principal != null && point.interest != null
+              ? `${data.labels?.principal || "Principal"}: ${splitMoney(point.principal)} · ` +
+                `${data.labels?.interest || "Interest"}: ${splitMoney(point.interest)}`
+              : null;
+          return {
+            label: data.labels?.[s.key] || s.key,
+            value: money(point.balance),
+            split,
+          };
         })
         .filter(Boolean);
       // The domain can open before the first series point (a period that
@@ -402,13 +532,18 @@ export default class extends Controller {
       const dateRow = document.createElement("div");
       dateRow.className = CHART_TOOLTIP_CONTEXT_CLASSES;
       dateRow.textContent = monthYear.format(date);
-      const valueRows = rows.map(({ label, value }) => {
+      const valueRows = rows.flatMap(({ label, value, split }) => {
         const row = document.createElement("div");
         const amount = document.createElement("span");
         amount.className = CHART_TOOLTIP_VALUE_CLASSES;
         amount.textContent = value;
         row.append(`${label}: `, amount);
-        return row;
+        if (!split) return [row];
+        // Secondary styling, under the balance it explains.
+        const splitRow = document.createElement("div");
+        splitRow.className = CHART_TOOLTIP_CONTEXT_CLASSES;
+        splitRow.textContent = split;
+        return [row, splitRow];
       });
       tooltip.replaceChildren(dateRow, ...valueRows);
       tooltip.style.display = "block";
