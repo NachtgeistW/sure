@@ -21,16 +21,21 @@ class ReleaseWorkflowTest < ActiveSupport::TestCase
     end
   end
 
-  test "alpha and stable releases publish explicit versions without floating channels" do
+  test "version tag releases move latest and non-alpha releases also move stable" do
     with_repo do |dir|
-      %w[2026.11.2-alpha 2026.11.2].each do |version|
-        success, output = resolve(dir, version)
-        assert success, version
-        assert_includes output, "release=true"
-        assert_includes output, "type=raw,value=#{version}"
-        assert_not_includes output, "type=raw,value=stable"
-        assert_not_includes output, "type=raw,value=latest"
-      end
+      success, output = resolve(dir, "2026.11.2-alpha")
+      assert success, output
+      assert_includes output, "release=true"
+      assert_includes output, "type=raw,value=2026.11.2-alpha"
+      assert_includes output, "type=raw,value=latest"
+      assert_not_includes output, "type=raw,value=stable"
+
+      success, output = resolve(dir, "2026.11.2")
+      assert success, output
+      assert_includes output, "release=true"
+      assert_includes output, "type=raw,value=2026.11.2"
+      assert_includes output, "type=raw,value=latest"
+      assert_includes output, "type=raw,value=stable"
     end
   end
 
@@ -98,8 +103,8 @@ class ReleaseWorkflowTest < ActiveSupport::TestCase
       assert success
       assert_not_includes output, "type=raw,value=0.7.7"
       assert_includes output, "type=raw,value=2027.1.1"
-      assert_not_includes output, "type=raw,value=stable"
-      assert_not_includes output, "type=raw,value=latest"
+      assert_includes output, "type=raw,value=stable"
+      assert_includes output, "type=raw,value=latest"
     end
   end
 
