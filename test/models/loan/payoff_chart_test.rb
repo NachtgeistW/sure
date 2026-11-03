@@ -225,6 +225,64 @@ class Loan::PayoffChartTest < ActiveSupport::TestCase
     )
   end
 
+  # The tooltip on each scheduled payment splits it into principal and interest
+  # (#4006), so a screen reader is told the same detail exists.
+  test "the accessible description says each scheduled payment's tooltip splits principal and interest" do
+    payload = Loan::PayoffChart.new(on_contract_loan, as_of: @today).payload
+
+    composition = composition_sentence
+    assert_match(/Principal.*Interest/, composition)
+    assert_includes payload[:aria_description], composition
+  end
+
+  # The tooltip stops at plotted dates with no split when no scheduled payment
+  # falls in the window, so the description must not promise one there.
+  test "the accessible description does not mention the split for a window past the last scheduled payment" do
+    loan = build_loan
+    as_of = loan.amortization_schedule.payoff_date + 45
+    window = Period.new(key: "current_month", start_date: as_of.beginning_of_month, end_date: as_of)
+
+    payload = Loan::PayoffChart.new(loan, as_of: as_of, period: window).payload
+
+    assert_empty payload[:scheduled].select { |point|
+      point.key?(:principal) && Date.iso8601(point[:date]).between?(Date.iso8601(payload[:domain_start]), Date.iso8601(payload[:domain_end]))
+    }, "the window must hold no scheduled payment for this test to mean anything"
+    assert_not_includes payload[:aria_description], composition_sentence
+
+    whole_life = Loan::PayoffChart.new(loan, as_of: as_of).payload
+    assert_includes whole_life[:aria_description], composition_sentence
+  end
+
+  # The tooltip stops at a payment on the window's start edge, as the chart
+  # controller includes it, and shows its split, so the description says so.
+  test "the accessible description mentions the split for a window starting on the final repayment" do
+    loan = build_loan
+    final = loan.amortization_schedule.payoff_date
+    as_of = final + 5
+    window = Period.new(key: "current_month", start_date: final, end_date: as_of)
+
+    payload = Loan::PayoffChart.new(loan, as_of: as_of, period: window).payload
+
+    assert_equal final.iso8601, payload[:scheduled].last[:date], "the final repayment must sit on the window's start"
+    assert_includes payload[:aria_description], composition_sentence
+  end
+
+  # A window between two payments holds none, so the tooltip stops at the
+  # plotted dates in it, and the scheduled row there shows the nearest
+  # payment's split.
+  test "the accessible description mentions the split for a window between two payments" do
+    loan = build_loan
+    dates = loan.amortization_schedule.payments.map(&:date)
+    gap_start = dates[5] + 1
+    window = Period.new(key: "current_month", start_date: gap_start, end_date: dates[6] - 1)
+
+    payload = Loan::PayoffChart.new(loan, as_of: dates[6] - 1, period: window).payload
+
+    assert_empty payload[:scheduled].select { |point| Date.iso8601(point[:date]).between?(gap_start, dates[6] - 1) },
+      "the window must hold no scheduled point for this test to mean anything"
+    assert_includes payload[:aria_description], composition_sentence
+  end
+
   test "the accessible description dates recorded history when it starts after origination" do
     loan = on_contract_loan
     first_recorded_date = loan.origination_date >> 6
@@ -270,6 +328,58 @@ class Loan::PayoffChartTest < ActiveSupport::TestCase
     # pay off it is nil, so a card is never quoted a figure of zero.
     assert_operator payload[:balloon], :>, 0
     assert_nil Loan::PayoffChart.new(on_contract_loan, as_of: @today).payload[:balloon]
+  end
+
+  # Without an extra the payload is exactly what it was before the extra
+  # existed: no key, no visible entry, no label.
+  test "without an extra projection the payload is unchanged" do
+    payload = Loan::PayoffChart.new(on_contract_loan, as_of: @today, period: @all_time).payload
+
+    assert_equal %i[actual scheduled projected], Loan::PayoffChart::SERIES
+    assert_equal %i[
+      today locale currency currency_precision domain_start domain_end actual scheduled projected visible
+      scheduled_payoff_date projected_payoff_date months_saved interest_saved balloon labels aria_description
+    ], payload.keys
+    assert_equal %i[actual scheduled projected], payload[:visible]
+    assert_equal %i[actual scheduled projected principal interest interest_share principal_share today interactive_chart], payload[:labels].keys
+  end
+
+  test "an extra projection draws its own line, named in the legend and the description" do
+    loan = on_contract_loan
+    projection = loan.payoff_projection(as_of: @today)
+    extra = loan.payoff_projection(as_of: @today, extra: 5_000)
+
+    payload = Loan::PayoffChart.new(loan, as_of: @today, period: @all_time,
+                                    projection: projection, extra_projection: extra).payload
+
+    assert_equal({ date: @today.iso8601, balance: projection.current_balance.amount.to_f }, payload[:extra].first,
+      "the extra line opens at today's balance, as the projection does")
+    assert_equal extra.payoff_date.iso8601, payload[:extra].last[:date]
+    assert_equal extra.payoff_date.iso8601, payload[:extra_payoff_date]
+    assert_includes payload[:visible], :extra
+    assert_equal I18n.t("UI.account.chart.loan.extra"), payload[:labels][:extra]
+    assert_includes payload[:aria_description], I18n.t(
+      "UI.account.chart.loan.aria_extra_payoff", date: I18n.l(extra.payoff_date, format: :long)
+    )
+    # The other series do not move for it.
+    plain = Loan::PayoffChart.new(loan, as_of: @today, period: @all_time, projection: projection).payload
+    assert_equal plain[:projected], payload[:projected]
+    assert_equal plain[:scheduled], payload[:scheduled]
+  end
+
+  # An extra too small to clear a loan that is far behind still draws, and the
+  # description says it does not pay the loan off rather than quoting nil.
+  test "the description says so when even the extra does not pay the loan off" do
+    loan = build_loan
+    loan.account.update!(balance: 400_000)
+    extra = loan.payoff_projection(as_of: @today, extra: 10)
+
+    payload = Loan::PayoffChart.new(loan, as_of: @today, extra_projection: extra).payload
+
+    assert_nil payload[:extra_payoff_date]
+    assert_includes payload[:aria_description], I18n.t(
+      "UI.account.chart.loan.aria_extra_payoff", date: I18n.t("UI.account.chart.loan.no_payoff")
+    )
   end
 
   # Owner review of #3474: the chart has no data table any more; the Schedule
@@ -336,7 +446,190 @@ class Loan::PayoffChartTest < ActiveSupport::TestCase
       "a 360-payment schedule ran #{long_count} statements where a 24-payment one ran #{short_count}"
   end
 
+  # we-promise/sure#3958: the tooltip says what each scheduled payment is made
+  # of. The figures are the schedule's own rows, so the chart and the Schedule
+  # tab's table cannot disagree.
+  test "each scheduled payment point carries the payment's principal and interest" do
+    loan = on_contract_loan
+    payload = Loan::PayoffChart.new(loan, as_of: @today, period: @all_time).payload
+    rows = loan.amortization_schedule.payments.index_by { |row| row.date.iso8601 }
+
+    payments = payload[:scheduled].drop(1)
+    assert_equal rows.size, payments.size
+    payments.each do |point|
+      row = rows.fetch(point[:date])
+      assert_equal row.principal.amount.to_f, point[:principal], "principal on #{point[:date]}"
+      assert_equal row.interest.amount.to_f, point[:interest], "interest on #{point[:date]}"
+      assert_in_delta row.payment.amount.to_f, point[:principal] + point[:interest], 0.005,
+        "the split on #{point[:date]} must add up to the payment"
+    end
+  end
+
+  # The point of showing the split: early payments are mostly interest, late
+  # ones mostly principal. If this ever fails the tooltip is telling users
+  # something comfortable and false.
+  test "the split on a long loan is interest-heavy at the start and principal-heavy at the end" do
+    payments = Loan::PayoffChart.new(older_loan, as_of: @today, period: @all_time).payload[:scheduled].drop(1)
+
+    assert_operator payments.first[:interest], :>, payments.first[:principal]
+    assert_operator payments.last[:principal], :>, payments.last[:interest]
+    assert_operator payments.first[:interest], :>, payments.last[:interest]
+  end
+
+  # Only contracted payments are split. The opening point is the amount
+  # borrowed, not a payment, and the projection is a forecast.
+  test "the opening point, the projection and the recorded balance carry no split" do
+    payload = Loan::PayoffChart.new(on_contract_loan, as_of: @today, period: @all_time).payload
+
+    assert_not payload[:scheduled].first.key?(:principal)
+    assert_not payload[:scheduled].first.key?(:interest)
+    [ :projected, :actual ].each do |key|
+      assert payload[key].any?, "#{key} must have points for this to mean anything"
+      assert payload[key].none? { |point| point.key?(:principal) || point.key?(:interest) },
+        "the #{key} series must not carry a split"
+    end
+  end
+
+  # CodeRabbit on #305: the split is shown at the currency's own precision, as
+  # the Schedule tab shows it, so a small component never rounds to zero. The
+  # payload carries that precision because Intl's default can differ from the
+  # app's (BTC is 8 here, 2 to Intl).
+  test "the payload carries the loan currency's precision for the split" do
+    loan = on_contract_loan
+    assert_equal 2, Loan::PayoffChart.new(loan, as_of: @today).payload[:currency_precision]
+
+    loan.account.update_columns(currency: "JPY")
+    assert_equal 0, Loan::PayoffChart.new(loan.reload, as_of: @today).payload[:currency_precision]
+  end
+
+  # The tooltip names the figures with the Schedule tab's own column labels.
+  test "the payload labels the split with the schedule table's own words" do
+    payload = Loan::PayoffChart.new(on_contract_loan, as_of: @today).payload
+
+    assert_equal I18n.t("loans.tabs.schedule.principal"), payload[:labels][:principal]
+    assert_equal I18n.t("loans.tabs.schedule.interest"), payload[:labels][:interest]
+  end
+
+  # The shading under the scheduled line splits it by each
+  # repayment's interest and principal share. The description says the same in
+  # words, from the schedule's own rows: interest over what was paid, across
+  # the first twelve payments and the last twelve.
+  test "the accessible description names the interest share of the first and final year's repayments" do
+    loan = older_loan
+    rows = loan.amortization_schedule.payments
+    first = interest_percent(rows.first(12))
+    last = interest_percent(rows.last(12))
+    assert_operator first, :>, last, "a long loan front-loads interest, or this cannot tell first from last"
+
+    description = Loan::PayoffChart.new(loan, as_of: @today, period: @all_time).payload[:aria_description]
+
+    assert_includes description, I18n.t("UI.account.chart.loan.aria_interest_share", first: first, last: last)
+  end
+
+  # Under 24 payments the first and final years would overlap, so one clause
+  # covers every payment. Both sides of the boundary.
+  test "a schedule of 23 payments quotes one interest share, and one of 24 quotes two" do
+    short = build_loan(term_months: 23)
+    long = build_loan(term_months: 24)
+    short_rows = short.amortization_schedule.payments
+    long_rows = long.amortization_schedule.payments
+    assert_equal [ 23, 24 ], [ short_rows.size, long_rows.size ]
+
+    short_description = Loan::PayoffChart.new(short, as_of: @today, period: @all_time).payload[:aria_description]
+    long_description = Loan::PayoffChart.new(long, as_of: @today, period: @all_time).payload[:aria_description]
+
+    assert_includes short_description, I18n.t("UI.account.chart.loan.aria_interest_share_overall", share: interest_percent(short_rows))
+    assert_not_includes short_description, I18n.t("UI.account.chart.loan.aria_interest_share", first: interest_percent(short_rows.first(12)), last: interest_percent(short_rows.last(12)))
+    assert_includes long_description, I18n.t("UI.account.chart.loan.aria_interest_share", first: interest_percent(long_rows.first(12)), last: interest_percent(long_rows.last(12)))
+    assert_not_includes long_description, I18n.t("UI.account.chart.loan.aria_interest_share_overall", share: interest_percent(long_rows))
+  end
+
+  # The shading reads the scheduled points the payload already carries; it
+  # adds no series and no key.
+  test "the payload's keys and series are unchanged by the shading" do
+    payload = Loan::PayoffChart.new(on_contract_loan, as_of: @today, period: @all_time).payload
+
+    assert_equal %i[today locale currency currency_precision domain_start domain_end actual scheduled projected visible
+                    scheduled_payoff_date projected_payoff_date months_saved interest_saved balloon labels aria_description],
+                 payload.keys
+    assert_equal %i[actual scheduled projected], Loan::PayoffChart::SERIES
+  end
+
+  test "the payload labels the two shares for the legend" do
+    payload = Loan::PayoffChart.new(on_contract_loan, as_of: @today).payload
+
+    assert_equal I18n.t("UI.account.chart.loan.interest_share"), payload[:labels][:interest_share]
+    assert_equal I18n.t("UI.account.chart.loan.principal_share"), payload[:labels][:principal_share]
+  end
+
+  # The chart draws every point and clips to the window, so a series with one
+  # point inside and its neighbour outside still crosses the plot: the final
+  # repayment entering a window, or the opening point leaving one. Its legend
+  # entries, the share swatches among them, follow it. Both sides of the
+  # boundary: a segment that only touches the window's edge draws nothing.
+  test "a series with one point inside and a neighbour outside is visible" do
+    loan = build_loan
+    rows = loan.amortization_schedule.payments
+    final = rows.last.date
+    assert_operator rows[-2].date, :<, final - 1, "the final payment's neighbour must sit outside the window"
+
+    entering = Period.new(key: "current_month", start_date: final - 1, end_date: final + 5)
+    payload = Loan::PayoffChart.new(loan, as_of: @today, period: entering).payload
+    assert_equal [ final - 1, final ].map(&:iso8601), [ payload[:domain_start], payload[:scheduled].last[:date] ]
+    assert_includes payload[:visible].map(&:to_s), "scheduled", "the final repayment enters the window and ends inside it"
+    assert_includes payload[:aria_description], interest_share_clause(rows)
+
+    touching = Period.new(key: "current_month", start_date: final, end_date: final + 5)
+    payload = Loan::PayoffChart.new(loan, as_of: @today, period: touching).payload
+    assert_not_includes payload[:visible].map(&:to_s), "scheduled", "a series that ends on the window's start draws nothing in it"
+    assert_not_includes payload[:aria_description], interest_share_clause(rows)
+
+    leaving = Period.new(key: "current_month", start_date: loan.origination_date, end_date: loan.origination_date + 10)
+    payload = Loan::PayoffChart.new(loan, as_of: @today, period: leaving).payload
+    assert_equal 1, payload[:scheduled].count { |point| Date.iso8601(point[:date]).between?(loan.origination_date, loan.origination_date + 10) }
+    assert_includes payload[:visible].map(&:to_s), "scheduled", "the opening point starts inside the window and the line leaves it"
+  end
+
+  # One recorded balance strictly inside the domain, away from both edges, is
+  # still one point, and the chart draws no line through it.
+  test "a single point inside the domain is not visible" do
+    account = travel_to(@today) do
+      Account.create!(
+        family: @family, name: "Loan #{SecureRandom.hex(4)}", balance: 500_000, currency: "USD",
+        accountable: Loan.new(subtype: "mortgage", interest_rate: 6, term_months: 24,
+                              rate_type: "fixed", start_date: @today - 10)
+      )
+    end
+    account.balances.create!(date: @today, balance: 500_000, currency: "USD",
+                             start_cash_balance: 500_000, flows_factor: -1)
+
+    payload = Loan::PayoffChart.new(account.loan, as_of: @today, period: @all_time).payload
+
+    assert_equal [ @today.iso8601 ], payload[:actual].map { |point| point[:date] }
+    assert_operator payload[:domain_start], :<, @today.iso8601
+    assert_operator payload[:domain_end], :>, @today.iso8601
+    assert_not_includes payload[:visible].map(&:to_s), "actual", "one point is not a line"
+  end
+
   private
+    # The description's sentence saying each payment's tooltip splits it into
+    # principal and interest.
+    def composition_sentence
+      I18n.t("UI.account.chart.loan.aria_composition",
+             principal: I18n.t("loans.tabs.schedule.principal"),
+             interest: I18n.t("loans.tabs.schedule.interest"))
+    end
+
+    def interest_share_clause(rows)
+      I18n.t("UI.account.chart.loan.aria_interest_share",
+             first: interest_percent(rows.first(12)), last: interest_percent(rows.last(12)))
+    end
+
+    def interest_percent(rows)
+      interest = rows.sum { |row| row.interest.amount }
+      (interest / (interest + rows.sum { |row| row.principal.amount }) * 100).round
+    end
+
     # Each bounded window the loan chart offers, with the start date the
     # shared Period gives it on @today. All is handled by @all_time.
     def window_starts
@@ -375,11 +668,11 @@ class Loan::PayoffChartTest < ActiveSupport::TestCase
       account.loan
     end
 
-    def build_loan(rate_type: "fixed")
+    def build_loan(rate_type: "fixed", term_months: 24)
       account = Account.create!(
         family: @family, name: "Loan #{SecureRandom.hex(4)}",
         balance: 500_000, currency: "USD",
-        accountable: Loan.new(subtype: "mortgage", interest_rate: 6, term_months: 24,
+        accountable: Loan.new(subtype: "mortgage", interest_rate: 6, term_months: term_months,
                               rate_type: rate_type, start_date: Date.new(2026, 1, 1))
       )
       # The opening valuation the account form records: Loan#original_balance

@@ -24,12 +24,15 @@ class Provider::Registry
     # one configured) keeps working. Returns nil when neither is configured —
     # callers guard on that.
     def preferred_llm_provider
-      order = Setting.llm_provider == "anthropic" ? %i[anthropic openai] : %i[openai anthropic]
-      order.each do |name|
+      llm_provider_order.each do |name|
         provider = get_provider(name)
         return provider if provider
       end
       nil
+    end
+
+    def llm_provider_order
+      Setting.llm_provider == "anthropic" ? %i[anthropic openai] : %i[openai anthropic]
     end
 
     def plaid_provider_for_region(region)
@@ -196,6 +199,14 @@ class Provider::Registry
 
         Provider::Realie.new(api_key)
       end
+
+      def chimnie
+        api_key = ENV["CHIMNIE_API_KEY"].presence || Setting.chimnie_api_key # pipelock:ignore
+
+        return nil unless api_key.present?
+
+        Provider::Chimnie.new(api_key)
+      end
   end
 
   def initialize(concept)
@@ -238,7 +249,7 @@ class Provider::Registry
         # builds them by name when benchmarking against Jev.
         %i[jev]
       when :property_valuations
-        %i[rentcast realie]
+        %i[rentcast realie chimnie]
       else
         %i[plaid_us plaid_eu github openai anthropic]
       end
