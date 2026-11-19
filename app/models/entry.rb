@@ -86,6 +86,10 @@ class Entry < ApplicationRecord
   before_destroy :prevent_individual_child_deletion, if: :split_child?
   after_save :track_earliest_saved_date, if: :saved_change_to_date?
 
+  # Split rows in the order they were entered. Without an ORDER BY PostgreSQL
+  # returns them in physical order, which shifts as rows are rewritten.
+  scope :in_split_order, -> { order(:created_at, :id) }
+
   scope :visible, -> {
     joins(:account).where(accounts: { status: [ "draft", "active" ] })
   }
@@ -141,13 +145,39 @@ class Entry < ApplicationRecord
     SQL
   }
 
-  scope :excluding_split_parents, -> {
+  SPLIT_PARENT_SQL = "EXISTS (SELECT 1 FROM entries ce WHERE ce.parent_entry_id = entries.id)".freeze
+  private_constant :SPLIT_PARENT_SQL
+
+  scope :excluding_split_parents, -> { where("NOT #{SPLIT_PARENT_SQL}") }
+
+  # Non-excluded entries plus split parents. split! excludes the parent so its
+  # children are not counted twice, but the parent is still the charge the bank
+  # made, so anything matching real payments (bills) keeps it. Every other
+  # excluded entry is dropped: user exclusions and system ones alike (stale
+  # pending entries, pending duplicates of a posted transaction).
+  scope :not_excluded_or_split_parent, -> { where("entries.excluded = FALSE OR #{SPLIT_PARENT_SQL}") }
+
+  # Balance updates: reconciliation valuations. On linked accounts most of them
+  # are the provider's daily balance, kept as a waypoint by
+  # Account::CurrentBalanceManager#preserve_anchor_as_reconciliation_if_stale.
+  # Opening and current anchors are not included.
+  scope :balance_updates, -> {
+    where(entryable_type: "Valuation", entryable_id: Valuation.reconciliation.select(:id))
+  }
+
+  scope :excluding_balance_updates, -> {
     where(<<~SQL.squish)
-      NOT EXISTS (
-        SELECT 1 FROM entries ce WHERE ce.parent_entry_id = entries.id
+      entries.entryable_type != 'Valuation'
+      OR NOT EXISTS (
+        SELECT 1 FROM valuations v
+        WHERE v.id = entries.entryable_id AND v.kind = 'reconciliation'
       )
     SQL
   }
+
+  # The entries in `ids` and the children of any of them that was split, which
+  # stand in for their excluded parent wherever money is counted.
+  scope :with_split_children, ->(ids) { where(id: ids).or(where(parent_entry_id: ids)) }
 
   # Future-dated entries haven't happened yet, so "actual" reporting (budgets,
   # income statement, insights) should not count them until their date
@@ -602,6 +632,12 @@ class Entry < ApplicationRecord
 
   def split_child?
     parent_entry_id.present?
+  end
+
+  # The other side of a split: a child's parent, or a parent's children. Both
+  # sides are the same money. Siblings are not: each child is its own part.
+  def split_counterparts
+    self.class.where(id: parent_entry_id).or(self.class.where(parent_entry_id: id))
   end
 
   # Splits this entry into child entries. Marks parent as excluded.
