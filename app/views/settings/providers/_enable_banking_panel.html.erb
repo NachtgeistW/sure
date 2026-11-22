@@ -53,7 +53,7 @@
 
     <%= form.text_area :client_certificate,
                         label: t("settings.providers.enable_banking_panel.client_certificate_label"),
-                        placeholder: "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----",
+                        placeholder: "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----", # pipelock:ignore example PEM header, not a key
                         value: "",
                         help_text: (t("settings.providers.enable_banking_panel.keep_client_certificate_hint") unless is_new_record || credentials_locked),
                         rows: 6,
